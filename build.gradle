@@ -8,6 +8,7 @@ group = 'com.corvidina'
 version = '1.0-SNAPSHOT'
 description = "A farming plugin"
 
+
 repositories {
     mavenCentral()
     maven {
@@ -19,15 +20,18 @@ repositories {
         url = "https://oss.sonatype.org/content/groups/public/"
     }
     maven {
-        name = "jitpack"
-        url = "https://jitpack.io"
+        name = "sonatype-snapshot"
+        url = "https://oss.sonatype.org/content/repositories/snapshots"
     }
 }
 
 dependencies {
-    compileOnly("io.papermc.paper:paper-api:1.21.5-R0.1-SNAPSHOT")
+    compileOnly("io.papermc.paper:paper-api:1.21.4-R0.1-SNAPSHOT")
     paperweight.paperDevBundle("1.21.4-R0.1-SNAPSHOT")
-    implementation 'com.github.stefvanschie:IF:0.10.17'
+
+    implementation 'me.devnatan:inventory-framework-api:3.3.8'
+    implementation 'me.devnatan:inventory-framework-platform-paper:3.3.8'
+    implementation 'me.devnatan:inventory-framework-anvil-input:3.3.8'
 }
 
 tasks {
