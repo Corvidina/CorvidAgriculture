@@ -1,0 +1,25 @@
+name: CorvidAgriculture
+version: '1.0-SNAPSHOT'
+main: com.corvidina.corvidAgriculture.CorvidAgriculture
+api-version: '1.21'
+description: A farming and cooking plugin oriented toward Towny gameplay integration.
+permissions:
+  corvidagriculture.universal:
+    description: Universal player permissions
+    default: true
+  corvidagriculture.admin:
+    descripion: Administrative player permissions
+    default: op
+commands:
+  spawncustomentity:
+    description: Summons a custom entity
+    usage: /spawncustomentity (Entity name)
+    permission: corvidagriculture.admin
+  agriculture:
+    description: Root command for CorvidAgriculture
+    usage: /agriculture
+    permission: corvidagriculture.universal;
+  ager:
+    description: Root command for CorvidAgriculture
+    usage: /ager
+    permission: corvidagriculture.universal
