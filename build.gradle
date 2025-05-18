@@ -2,6 +2,7 @@ plugins {
     id 'java'
     id("xyz.jpenilla.run-paper") version "2.3.1"
     id("io.papermc.paperweight.userdev") version "2.0.0-beta.16"
+    id("com.github.johnrengelman.shadow") version "8.1.1"
 }
 
 group = 'com.corvidina'
@@ -29,7 +30,6 @@ dependencies {
     compileOnly("io.papermc.paper:paper-api:1.21.4-R0.1-SNAPSHOT")
     paperweight.paperDevBundle("1.21.4-R0.1-SNAPSHOT")
 
-    implementation 'me.devnatan:inventory-framework-api:3.3.8'
     implementation 'me.devnatan:inventory-framework-platform-paper:3.3.8'
     implementation 'me.devnatan:inventory-framework-anvil-input:3.3.8'
 }
@@ -69,3 +69,14 @@ processResources {
         expand props
     }
 }
+
+shadowJar {
+    archiveClassifier.set('all')
+    manifest {
+        attributes('Implementation-Title': project.name,
+                'Implementation-Version': project.version
+        )
+    }
+}
+
+

@@ -1,7 +1,11 @@
 package com.corvidina.corvidAgriculture.listeners;
 
+import com.corvidina.corvidAgriculture.items.CorvidAgricultureItems;
+import com.corvidina.corvidAgriculture.items.ItemHandler;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
+import org.bukkit.craftbukkit.inventory.CraftItemStack;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
@@ -43,7 +47,9 @@ public class PlayerBreaksBlock implements Listener {
     }
 
     public void handleCactus(BlockBreakEvent event){
-
+        Location blockLoc = event.getBlock().getLocation().toBlockLocation();
+        blockLoc.add(0.5,0.5,0.5);
+        event.getBlock().getWorld().dropItemNaturally(blockLoc, CraftItemStack.asBukkitCopy(ItemHandler.buildItem(CorvidAgricultureItems.PRICKLY_PEAR)));
     }
 
     public void handleCarrots(BlockBreakEvent event){

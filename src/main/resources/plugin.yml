@@ -2,9 +2,9 @@ name: CorvidAgriculture
 version: '1.0-SNAPSHOT'
 main: com.corvidina.corvidAgriculture.CorvidAgriculture
 api-version: '1.21'
-depend:
-  - InventoryFramework
 description: A farming and cooking plugin oriented toward Towny gameplay integration.
+depends:
+  - InventoryFramework
 permissions:
   corvidagriculture.universal:
     description: Universal player permissions

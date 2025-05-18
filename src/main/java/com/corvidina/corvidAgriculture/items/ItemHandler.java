@@ -1,7 +1,13 @@
 package com.corvidina.corvidAgriculture.items;
 
 import com.corvidina.corvidAgriculture.CorvidAgriculture;
+import com.destroystokyo.paper.profile.PlayerProfile;
+import com.destroystokyo.paper.profile.ProfileProperty;
+import com.mojang.authlib.GameProfile;
+import com.mojang.authlib.properties.Property;
+import com.mojang.authlib.properties.PropertyMap;
 import io.papermc.paper.datacomponent.DataComponentTypes;
+import io.papermc.paper.datacomponent.item.Consumable;
 import io.papermc.paper.datacomponent.item.FoodProperties;
 import io.papermc.paper.datacomponent.item.ItemLore;
 import net.kyori.adventure.text.Component;
@@ -10,9 +16,13 @@ import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.Tag;
 import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.item.component.CustomData;
+import net.minecraft.world.item.component.ResolvableProfile;
 import net.minecraft.world.level.Level;
 import org.bukkit.Material;
 import org.bukkit.craftbukkit.inventory.CraftItemStack;
@@ -21,7 +31,9 @@ import org.bukkit.inventory.ItemRarity;
 import org.jetbrains.annotations.NotNull;
 
 import javax.xml.crypto.Data;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
+import java.util.UUID;
 
 public class ItemHandler {
     //Lore line length -> 24 chars
@@ -116,7 +128,7 @@ public class ItemHandler {
         CompoundTag root = new CompoundTag();
         CompoundTag customTag = new CompoundTag();
         //tag data
-        customTag.putString("item_type", CorvidAgricultureItems.CROW_FEATHER.toString());
+        customTag.putString("item_type", CorvidAgricultureItems.CROW_FEATHER.toString().toLowerCase());
         //assign tags to root
         root.put("corvidagriculture",customTag);
 
@@ -144,7 +156,7 @@ public class ItemHandler {
         CompoundTag root = new CompoundTag();
         CompoundTag customTag = new CompoundTag();
         //tag data
-        customTag.putString("item_type", CorvidAgricultureItems.INSECT_CARAPACE.toString());
+        customTag.putString("item_type", CorvidAgricultureItems.INSECT_CARAPACE.toString().toLowerCase());
         //apply tag to root
         root.put("corvidagriculture",customTag);
 
@@ -171,7 +183,7 @@ public class ItemHandler {
         CompoundTag root = new CompoundTag();
         CompoundTag customTag = new CompoundTag();
         //tag data
-        customTag.putString("item_type",CorvidAgricultureItems.INSECT_LARVAE.toString());
+        customTag.putString("item_type",CorvidAgricultureItems.INSECT_LARVAE.toString().toLowerCase());
         //apply tag to root
         root.put("corvidagriculture",customTag);
 
@@ -190,8 +202,9 @@ public class ItemHandler {
                 .build()
         );
         bktStack.setData(DataComponentTypes.ITEM_MODEL,
-                Material.GREEN_DYE.getDefaultData(DataComponentTypes.ITEM_MODEL)
+                Material.PLAYER_HEAD.getDefaultData(DataComponentTypes.ITEM_MODEL)
         );
+        bktStack.setData(DataComponentTypes.PROFILE,getProfile("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNWQzNWVlZGQ0MDg5NTU3NmJlMmJiNDNhOWRjNzllYjdhOWYwMGJmNDg4MjFjYzEwZjQ1N2JlMzMyOWMxZmFkZSJ9fX0="));
         bktStack.setData(DataComponentTypes.MAX_STACK_SIZE,64);
         bktStack.setData(DataComponentTypes.RARITY,ItemRarity.COMMON);
         bktStack.setData(DataComponentTypes.ITEM_NAME,
@@ -236,6 +249,14 @@ public class ItemHandler {
                         )
         ).build();
         bktStack.setData(DataComponentTypes.LORE,lore);
+
+        bktStack.setData(DataComponentTypes.CONSUMABLE, Consumable.consumable().hasConsumeParticles(false).build());
+        bktStack.setData(DataComponentTypes.FOOD, FoodProperties.food()
+                .canAlwaysEat(false)
+                .nutrition(3)
+                .saturation((float)3.6)
+                .build()
+        );
 
         ItemStack itemStack = CraftItemStack.asNMSCopy(bktStack);
         CompoundTag root = new CompoundTag();
@@ -906,7 +927,7 @@ public class ItemHandler {
 
         String str = tag.get("item_type")==null?null:tag.getString("item_type");
         try {
-            return CorvidAgricultureItems.valueOf(str);
+            return CorvidAgricultureItems.valueOf(str.toUpperCase());
         } catch (Exception ignored){
             return null;
         }
@@ -931,6 +952,32 @@ public class ItemHandler {
     public static void spawnItemStack(ItemStack itemStack, int x, int y, int z, Level level){
         ItemEntity item = new ItemEntity(level, x,y,z, itemStack);
         level.getWorld().addEntity(item, CreatureSpawnEvent.SpawnReason.CUSTOM);
+    }
+    public static org.bukkit.inventory.ItemStack createHead(String base64){
+        ItemStack itemStack = new ItemStack(Items.PLAYER_HEAD);
+        UUID name = UUID.nameUUIDFromBytes(base64.getBytes(StandardCharsets.UTF_8));
+        GameProfile profile = new GameProfile(name,name.toString());
+        profile.getProperties().put("textures",new Property("textures",base64));
+
+
+        itemStack.set(DataComponents.PROFILE, new ResolvableProfile(profile));
+        return CraftItemStack.asBukkitCopy(itemStack);
+    }
+    public static io.papermc.paper.datacomponent.item.ResolvableProfile getProfile(String base64){
+        UUID name = UUID.nameUUIDFromBytes(base64.getBytes(StandardCharsets.UTF_8));
+        GameProfile profile = new GameProfile(name,name.toString());
+        profile.getProperties().put("textures",new Property("textures",base64));
+
+        return io.papermc.paper.datacomponent.item.ResolvableProfile.resolvableProfile()
+                .uuid(name)
+                .name(null)
+                .addProperty(new ProfileProperty("textures",base64))
+                .build();
+    }
+    public static org.bukkit.inventory.ItemStack playerHead(PlayerProfile profile){
+        org.bukkit.inventory.ItemStack itemStack = new org.bukkit.inventory.ItemStack(Material.PLAYER_HEAD);
+        itemStack.setData(DataComponentTypes.PROFILE, io.papermc.paper.datacomponent.item.ResolvableProfile.resolvableProfile(profile));
+        return  itemStack;
     }
 }
 enum Value {
