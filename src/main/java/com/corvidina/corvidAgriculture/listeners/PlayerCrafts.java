@@ -1,5 +1,6 @@
 package com.corvidina.corvidAgriculture.listeners;
 
+import com.corvidina.corvidAgriculture.items.ItemHandler;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -14,7 +15,7 @@ public class PlayerCrafts implements Listener {
     @EventHandler
     public void onBlockHit(BlockDamageEvent event){
         Material itemType = event.getItemInHand().getType();
-        if (itemIsHoe(itemType)) {
+        if (ItemHandler.itemIsHoe(itemType)) {
             switch (getCraftingStationType(event)) {
                 case null : {
                     return;
@@ -30,14 +31,7 @@ public class PlayerCrafts implements Listener {
             }
         }
     }
-    public static boolean itemIsHoe(Material itemType){
-        return (itemType==Material.NETHERITE_HOE
-                || itemType==Material.DIAMOND_HOE
-                || itemType==Material.IRON_HOE
-                || itemType==Material.GOLDEN_HOE
-                || itemType==Material.STONE_HOE
-                || itemType==Material.WOODEN_HOE);
-    }
+
     private CraftingStation getCraftingStationType(BlockDamageEvent event){
         Block block = event.getBlock();
         //check that the block is a composter

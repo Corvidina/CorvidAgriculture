@@ -2,17 +2,13 @@ package com.corvidina.corvidAgriculture.commands;
 
 import com.corvidina.corvidAgriculture.CorvidAgriculture;
 import com.corvidina.corvidAgriculture.gui.AgricultureMenu;
-import com.corvidina.corvidAgriculture.items.CorvidAgricultureItems;
-import me.devnatan.inventoryframework.AnvilInputFeature;
 import me.devnatan.inventoryframework.ViewFrame;
-import me.lucko.spark.paper.proto.SparkProtos;
+import me.devnatan.inventoryframework.component.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
-import org.bukkit.craftbukkit.inventory.CraftItemStack;
 import org.bukkit.entity.Player;
-import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
 public class AgricultureCommand
@@ -25,16 +21,16 @@ public class AgricultureCommand
 
     @Override
     public boolean onCommand(@NotNull CommandSender commandSender, @NotNull Command command, @NotNull String s, @NotNull String @NotNull [] strings) {
+        CorvidAgriculture plugin = CorvidAgriculture.getPlugin(CorvidAgriculture.class);
         if(commandSender instanceof Player){
             final Player player = (Player)commandSender;
 
-            ViewFrame viewFrame = ViewFrame.create(plugin).
-                    install(AnvilInputFeature.AnvilInput).
-                    with(new AgricultureMenu()).
-                    register();
-            viewFrame.open(AgricultureMenu.class, player);
+            AgricultureMenu.initAgricultureMenu().open(AgricultureMenu.class,player);
+
 
         }
+
+
 
         return true;
     }

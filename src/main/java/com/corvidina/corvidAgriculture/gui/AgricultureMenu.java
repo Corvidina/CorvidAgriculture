@@ -1,13 +1,12 @@
 package com.corvidina.corvidAgriculture.gui;
 
-import com.corvidina.corvidAgriculture.items.CorvidAgricultureItems;
+import com.corvidina.corvidAgriculture.CorvidAgriculture;
 import com.corvidina.corvidAgriculture.items.ItemHandler;
 import io.papermc.paper.datacomponent.DataComponentTypes;
 import me.devnatan.inventoryframework.*;
 import me.devnatan.inventoryframework.context.OpenContext;
 import me.devnatan.inventoryframework.context.RenderContext;
 import me.devnatan.inventoryframework.context.SlotClickContext;
-import me.devnatan.inventoryframework.runtime.InventoryFramework;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.Style;
 import net.kyori.adventure.text.format.TextColor;
@@ -15,22 +14,17 @@ import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Color;
 import org.bukkit.FireworkEffect;
 import org.bukkit.Material;
-import org.bukkit.craftbukkit.inventory.CraftItemStack;
-import org.bukkit.inventory.ItemFlag;
+import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 
-import javax.xml.crypto.Data;
-import java.awt.*;
-
 public class AgricultureMenu extends View {
-    private ViewConfig cfg;
     @Override
     public void onInit(ViewConfigBuilder config){
         config.type(ViewType.CHEST);
         config.title(
                 Component.text()
                         .content("CorvidAgriculture Menu")
-                        .style(Style.style(TextColor.color(0xB100FF)))
+                        .style(Style.style(TextColor.color(0x18516),TextDecoration.BOLD))
                         .build()
         );
         config.layout(
@@ -42,7 +36,7 @@ public class AgricultureMenu extends View {
                 "ABABABABA"
         );
         config.cancelOnClick();
-        cfg=config.build();
+        config.build();
     }
 
     @Override
@@ -57,9 +51,14 @@ public class AgricultureMenu extends View {
         render.layoutSlot('B',brown);
 
 
-        render.slot(1,3, new ItemStack(Material.AIR));
+        ItemStack temp = ItemHandler.itemIsHoe(render.getPlayer().getInventory().getItem(EquipmentSlot.HAND).getType())
+                ?render.getPlayer().getInventory().getItem(EquipmentSlot.HAND)
+                :ItemHandler.itemIsHoe(render.getPlayer().getInventory().getItem(EquipmentSlot.OFF_HAND).getType())
+                ?render.getPlayer().getInventory().getItem(EquipmentSlot.OFF_HAND)
+                :ItemStack.empty();
+        render.slot(1,3, temp);
 
-        ItemStack temp = ItemHandler.playerHead(render.getPlayer().getPlayerProfile());
+        temp = ItemHandler.playerHead(render.getPlayer().getPlayerProfile());
         temp.setData(DataComponentTypes.CUSTOM_NAME, Component.text()
                 .content("Your Stats")
                 .style(Style.style(TextColor.color(0x18516),TextDecoration.BOLD,TextDecoration.ITALIC.withState(false)))
@@ -81,15 +80,15 @@ public class AgricultureMenu extends View {
                 .style(Style.style(TextColor.color(0x7DD5), TextDecoration.ITALIC.withState(false),TextDecoration.BOLD))
                 .build()
         );
-        render.slot(3,4,temp);
-        temp = new ItemStack(Material.DIAMOND_HOE);
+        render.slot(3,4,temp).onClick(this::openServerCateringMenu);
 
+        temp = new ItemStack(Material.DIAMOND_HOE);
         temp.setData(DataComponentTypes.ITEM_NAME, Component.text()
                 .content("Crop Compendium")
                 .style(Style.style(TextColor.color(0xDCD200),TextDecoration.ITALIC.withState(false),TextDecoration.BOLD))
                 .build()
         );
-        render.slot(3,5,temp);
+        render.slot(3,5,temp).onClick(context -> context.openForPlayer(CropCompendium.class));
 
         temp = new ItemStack(Material.POISONOUS_POTATO);
         temp.setData(DataComponentTypes.ITEM_NAME, Component.text()
@@ -148,7 +147,7 @@ public class AgricultureMenu extends View {
         temp = new ItemStack(Material.PURPLE_GLAZED_TERRACOTTA);
         temp.setData(DataComponentTypes.ITEM_NAME, Component.text()
                 .content("Hexes")
-                .style(Style.style(TextColor.color(0xBE0018),TextDecoration.ITALIC.withState(false),TextDecoration.BOLD))
+                .style(Style.style(TextColor.color(0x9B0018),TextDecoration.ITALIC.withState(false),TextDecoration.BOLD))
                 .build()
         );
         render.slot(4,7,temp);
@@ -162,6 +161,11 @@ public class AgricultureMenu extends View {
         render.slot(6,5, temp);
     }
 
+    private void openServerCateringMenu(SlotClickContext slot){
+        slot.closeForPlayer();
+        CorvidAgriculture.getPlugin(CorvidAgriculture.class).getCateringMenu().open(ServerCatering.class,slot.getPlayer());
+    }
+
     @Override
     public void onOpen(OpenContext open){
 
@@ -169,10 +173,18 @@ public class AgricultureMenu extends View {
 
     @Override
     public void onClick(SlotClickContext context){
-        context.getPlayer().sendMessage("Hey! Don't click me!");
+        context.getPlayer();
+
     }
 
-    public AgricultureMenu(){
-
+    public static ViewFrame initAgricultureMenu(){
+        CorvidAgriculture plugin = CorvidAgriculture.getPlugin(CorvidAgriculture.class);
+        ViewFrame viewFrame = ViewFrame.create(plugin).
+                install(AnvilInputFeature.AnvilInput);
+        viewFrame.with(new AgricultureMenu());
+        viewFrame.with(new CropCompendium());
+        viewFrame.with(new CropSell());
+        viewFrame.register();
+        return viewFrame;
     }
 }

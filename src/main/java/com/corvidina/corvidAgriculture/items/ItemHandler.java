@@ -10,6 +10,7 @@ import io.papermc.paper.datacomponent.DataComponentTypes;
 import io.papermc.paper.datacomponent.item.Consumable;
 import io.papermc.paper.datacomponent.item.FoodProperties;
 import io.papermc.paper.datacomponent.item.ItemLore;
+import io.papermc.paper.registry.entry.RegistryEntryMeta;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.Style;
 import net.kyori.adventure.text.format.TextColor;
@@ -47,7 +48,7 @@ public class ItemHandler {
     private static double[] valueChances = setValueChances(new double[]{
             5, 30, 25, 20, 15, 5
     });
-    public static double[] setValueChances(double[] rc){
+    public static double[] setValueChances(double @NotNull [] rc){
         if(rc.length!=6){
             throw new RuntimeException("rarity chances array failed to have 6 elements");
         }
@@ -88,7 +89,7 @@ public class ItemHandler {
             return Value.EXEMPLARY;
         return Value.DIVINE;
     }
-    private static int getValueAsIndex(Value value){
+    private static int getValueAsIndex(@NotNull Value value){
         return switch (value){
             case ROTTEN -> 0;
             case FAIR -> 1;
@@ -107,6 +108,14 @@ public class ItemHandler {
                 baseValues[getValueAsIndex(getValue(itemStack))]*
                 sellMultiplier*
                 itemStack.getBukkitStack().getAmount();
+    }
+    public static boolean itemIsHoe(Material itemType){
+        return (itemType==Material.NETHERITE_HOE
+                || itemType==Material.DIAMOND_HOE
+                || itemType==Material.IRON_HOE
+                || itemType==Material.GOLDEN_HOE
+                || itemType==Material.STONE_HOE
+                || itemType==Material.WOODEN_HOE);
     }
 
     private static ItemStack buildCrowFeather(){
@@ -196,9 +205,13 @@ public class ItemHandler {
         Value value = randomValue();
         org.bukkit.inventory.ItemStack bktStack = new org.bukkit.inventory.ItemStack(Material.MUSIC_DISC_5);
         bktStack.unsetData(DataComponentTypes.JUKEBOX_PLAYABLE);
+        bktStack.setData(DataComponentTypes.CONSUMABLE, Consumable.consumable()
+                .hasConsumeParticles(false)
+                .build());
         bktStack.setData(DataComponentTypes.FOOD, FoodProperties.food()
+                .canAlwaysEat(false)
                 .nutrition(3)
-                .saturation((float)1.5)
+                .saturation((float)3.6)
                 .build()
         );
         bktStack.setData(DataComponentTypes.ITEM_MODEL,
@@ -217,7 +230,7 @@ public class ItemHandler {
         //Set item "lore" -- Sell value, show rating value etc
         ItemLore lore = ItemLore.lore().addLine(
                 Component.text()
-                        .content("Obtained by breaking a Cactus with a hoe.")
+                        .content("Obtained by breaking an aged Cactus with a hoe.")
                         .style(Style.style(TextColor.color(0xAAAAAA),TextDecoration.ITALIC.withState(false)))
         ).addLine(Component.text("")
         ).addLine(
@@ -250,13 +263,7 @@ public class ItemHandler {
         ).build();
         bktStack.setData(DataComponentTypes.LORE,lore);
 
-        bktStack.setData(DataComponentTypes.CONSUMABLE, Consumable.consumable().hasConsumeParticles(false).build());
-        bktStack.setData(DataComponentTypes.FOOD, FoodProperties.food()
-                .canAlwaysEat(false)
-                .nutrition(3)
-                .saturation((float)3.6)
-                .build()
-        );
+
 
         ItemStack itemStack = CraftItemStack.asNMSCopy(bktStack);
         CompoundTag root = new CompoundTag();
@@ -280,9 +287,14 @@ public class ItemHandler {
                 .saturation((float)1.5)
                 .build()
         );
+        bktStack.setData(DataComponentTypes.CONSUMABLE, Consumable.consumable()
+                .consumeSeconds((float)0.8)
+                .hasConsumeParticles(false)
+                .build());
         bktStack.setData(DataComponentTypes.ITEM_MODEL,
-                Material.GREEN_DYE.getDefaultData(DataComponentTypes.ITEM_MODEL)
+                Material.PLAYER_HEAD.getDefaultData(DataComponentTypes.ITEM_MODEL)
         );
+        bktStack.setData(DataComponentTypes.PROFILE,getProfile("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvOWI0N2UwNjc3MzY3NzgwYjc2NTNkY2ViZjhjZjg4YmViNGRhYzk0Yzk4ZTY0NDYzNzVjYjVlYzhlOWEzOGRiNCJ9fX0="));
         bktStack.setData(DataComponentTypes.MAX_STACK_SIZE,64);
         bktStack.setData(DataComponentTypes.RARITY,ItemRarity.COMMON);
         bktStack.setData(DataComponentTypes.ITEM_NAME,
@@ -900,6 +912,9 @@ public class ItemHandler {
             case CRANBERRY -> buildCranberry();
             case null, default -> null;
         };
+    }
+    public static org.bukkit.inventory.ItemStack buildItemBkt(CorvidAgricultureItems item){
+        return buildItem(item)==null?null:CraftItemStack.asBukkitCopy(buildItem(item));
     }
 
     private static Value getValue(ItemStack itemStack){
