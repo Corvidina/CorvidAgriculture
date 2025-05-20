@@ -184,6 +184,10 @@ public class AgricultureMenu extends View {
         viewFrame.with(new AgricultureMenu());
         viewFrame.with(new CropCompendium());
         viewFrame.with(new CropSell());
+        viewFrame.with(new CookingPot());
+        viewFrame.with(new Zeals());
+        viewFrame.with(new Juicer());
+        viewFrame.with(new Hexes());
         viewFrame.register();
         return viewFrame;
     }
