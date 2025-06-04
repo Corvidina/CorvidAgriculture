@@ -2,9 +2,6 @@ package com.corvidina.corvidAgriculture.commands;
 
 import com.corvidina.corvidAgriculture.CorvidAgriculture;
 import com.corvidina.corvidAgriculture.gui.AgricultureMenu;
-import me.devnatan.inventoryframework.ViewFrame;
-import me.devnatan.inventoryframework.component.Component;
-import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -21,13 +18,12 @@ public class AgricultureCommand
 
     @Override
     public boolean onCommand(@NotNull CommandSender commandSender, @NotNull Command command, @NotNull String s, @NotNull String @NotNull [] strings) {
-        CorvidAgriculture plugin = CorvidAgriculture.getPlugin(CorvidAgriculture.class);
+
         if(commandSender instanceof Player){
             final Player player = (Player)commandSender;
 
             AgricultureMenu.initAgricultureMenu().open(AgricultureMenu.class,player);
-
-
+            
         }
 
 

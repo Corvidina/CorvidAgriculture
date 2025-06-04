@@ -1,9 +1,6 @@
 package com.corvidina.corvidAgriculture.gui;
 
-import com.corvidina.corvidAgriculture.CateringOption;
 import com.corvidina.corvidAgriculture.CorvidAgriculture;
-import com.corvidina.corvidAgriculture.items.CorvidAgricultureItems;
-import com.corvidina.corvidAgriculture.items.ItemHandler;
 import io.papermc.paper.datacomponent.DataComponentTypes;
 import io.papermc.paper.datacomponent.item.ItemLore;
 import me.devnatan.inventoryframework.View;
@@ -97,8 +94,8 @@ public class ServerCatering extends View {
 
     public void reloadCaterings(){
         // Reloads the available catering options
-        int rand = (int)(Math.random()*Material.values().length);
-        itemStack = new ItemStack(Material.values()[rand]);
+
+
 
     }
 

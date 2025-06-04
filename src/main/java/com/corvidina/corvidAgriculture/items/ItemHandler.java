@@ -1,45 +1,50 @@
 package com.corvidina.corvidAgriculture.items;
 
+import com.corvidina.corvidAgriculture.BerryLike;
 import com.corvidina.corvidAgriculture.CorvidAgriculture;
 import com.destroystokyo.paper.profile.PlayerProfile;
 import com.destroystokyo.paper.profile.ProfileProperty;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
-import com.mojang.authlib.properties.PropertyMap;
 import io.papermc.paper.datacomponent.DataComponentTypes;
 import io.papermc.paper.datacomponent.item.Consumable;
 import io.papermc.paper.datacomponent.item.FoodProperties;
 import io.papermc.paper.datacomponent.item.ItemLore;
-import io.papermc.paper.registry.entry.RegistryEntryMeta;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.Style;
 import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.Tag;
-import net.minecraft.world.entity.item.ItemEntity;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
 import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.item.component.ResolvableProfile;
-import net.minecraft.world.level.Level;
 import org.bukkit.Material;
+import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
+import org.bukkit.block.BlockState;
+import org.bukkit.block.Skull;
+import org.bukkit.block.data.Directional;
+import org.bukkit.block.data.Rotatable;
 import org.bukkit.craftbukkit.inventory.CraftItemStack;
-import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.inventory.ItemRarity;
 import org.jetbrains.annotations.NotNull;
 
-import javax.xml.crypto.Data;
+import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.UUID;
 
 public class ItemHandler {
-    //Lore line length -> 24 chars
-    public static double sellMultiplier=1;
-    public static final HashMap<CorvidAgricultureItems, Double> materialBasedSellMultiplier=new HashMap<CorvidAgricultureItems,Double>();
+    public static CorvidAgriculture plugin = CorvidAgriculture.getPlugin(CorvidAgriculture.class);
+    public static double sellMultiplier=plugin.getSellMultiplier();
+    public static final HashMap<Crops, Double> materialBasedSellMultiplier=plugin.getMaterialBasedSellMultiplier();
+    public static final BlockFace[] headFaces = {
+            BlockFace.EAST,BlockFace.EAST_NORTH_EAST,BlockFace.EAST_SOUTH_EAST,
+            BlockFace.WEST,BlockFace.WEST_NORTH_WEST,BlockFace.WEST_SOUTH_WEST,
+            BlockFace.NORTH, BlockFace.NORTH_NORTH_EAST, BlockFace.NORTH_NORTH_WEST, BlockFace.NORTH_WEST, BlockFace.NORTH_EAST,
+            BlockFace.SOUTH, BlockFace.SOUTH_SOUTH_EAST, BlockFace.SOUTH_SOUTH_WEST, BlockFace.SOUTH_WEST, BlockFace.SOUTH_EAST
+    };
 
     //rotten fair good great exemplary divine
     public static double[] baseValues=new double[]{
@@ -59,13 +64,13 @@ public class ItemHandler {
         for (int i = 0; i < rc.length; i++) {
             rc[i]/=tota;
         }
-        valueChances =rc;
+        valueChances=rc;
         return valueChances;
     }
     public static double[] getValueChances(){
         return valueChances;
     }
-    public static double getMaterialBasedSellMultiplier(CorvidAgricultureItems material){
+    public static double getMaterialBasedSellMultiplier(Crops material){
         if(materialBasedSellMultiplier.containsKey(material))
             return materialBasedSellMultiplier.get(material);
         return 1;
@@ -101,10 +106,10 @@ public class ItemHandler {
     }
     public static double sellValueOfStack(ItemStack itemStack){
         if(getValue(itemStack)==null)
-            return getMaterialBasedSellMultiplier(getItemType(itemStack))*
+            return getMaterialBasedSellMultiplier(getCropType(itemStack))*
                     sellMultiplier*
                     itemStack.getBukkitStack().getAmount();
-        return getMaterialBasedSellMultiplier(getItemType(itemStack))*
+        return getMaterialBasedSellMultiplier(getCropType(itemStack))*
                 baseValues[getValueAsIndex(getValue(itemStack))]*
                 sellMultiplier*
                 itemStack.getBukkitStack().getAmount();
@@ -137,7 +142,7 @@ public class ItemHandler {
         CompoundTag root = new CompoundTag();
         CompoundTag customTag = new CompoundTag();
         //tag data
-        customTag.putString("item_type", CorvidAgricultureItems.CROW_FEATHER.toString().toLowerCase());
+        customTag.putString("item_type", MobDrops.CROW_FEATHER.toString().toLowerCase());
         //assign tags to root
         root.put("corvidagriculture",customTag);
 
@@ -165,7 +170,7 @@ public class ItemHandler {
         CompoundTag root = new CompoundTag();
         CompoundTag customTag = new CompoundTag();
         //tag data
-        customTag.putString("item_type", CorvidAgricultureItems.INSECT_CARAPACE.toString().toLowerCase());
+        customTag.putString("item_type", MobDrops.INSECT_CARAPACE.toString().toLowerCase());
         //apply tag to root
         root.put("corvidagriculture",customTag);
 
@@ -192,7 +197,7 @@ public class ItemHandler {
         CompoundTag root = new CompoundTag();
         CompoundTag customTag = new CompoundTag();
         //tag data
-        customTag.putString("item_type",CorvidAgricultureItems.INSECT_LARVAE.toString().toLowerCase());
+        customTag.putString("item_type", MobDrops.INSECT_LARVAE.toString().toLowerCase());
         //apply tag to root
         root.put("corvidagriculture",customTag);
 
@@ -201,83 +206,6 @@ public class ItemHandler {
         return nmsStack;
     }
 
-    private static ItemStack buildPricklyPear(){
-        Value value = randomValue();
-        org.bukkit.inventory.ItemStack bktStack = new org.bukkit.inventory.ItemStack(Material.MUSIC_DISC_5);
-        bktStack.unsetData(DataComponentTypes.JUKEBOX_PLAYABLE);
-        bktStack.setData(DataComponentTypes.CONSUMABLE, Consumable.consumable()
-                .hasConsumeParticles(false)
-                .build());
-        bktStack.setData(DataComponentTypes.FOOD, FoodProperties.food()
-                .canAlwaysEat(false)
-                .nutrition(3)
-                .saturation((float)3.6)
-                .build()
-        );
-        bktStack.setData(DataComponentTypes.ITEM_MODEL,
-                Material.PLAYER_HEAD.getDefaultData(DataComponentTypes.ITEM_MODEL)
-        );
-        bktStack.setData(DataComponentTypes.PROFILE,getProfile("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNWQzNWVlZGQ0MDg5NTU3NmJlMmJiNDNhOWRjNzllYjdhOWYwMGJmNDg4MjFjYzEwZjQ1N2JlMzMyOWMxZmFkZSJ9fX0="));
-        bktStack.setData(DataComponentTypes.MAX_STACK_SIZE,64);
-        bktStack.setData(DataComponentTypes.RARITY,ItemRarity.COMMON);
-        bktStack.setData(DataComponentTypes.ITEM_NAME,
-                Component.text()
-                        .content("Prickly Pear")
-                        .style(Style.style(TextDecoration.ITALIC.withState(false)))
-                        .build()
-        );
-
-        //Set item "lore" -- Sell value, show rating value etc
-        ItemLore lore = ItemLore.lore().addLine(
-                Component.text()
-                        .content("Obtained by breaking an aged Cactus with a hoe.")
-                        .style(Style.style(TextColor.color(0xAAAAAA),TextDecoration.ITALIC.withState(false)))
-        ).addLine(Component.text("")
-        ).addLine(
-                Component.text()
-                        .content("Information:")
-                        .style(Style.style(TextColor.color(0xCBB9),TextDecoration.ITALIC.withState(false),TextDecoration.BOLD))
-                        .build()
-        ).addLine(
-                Component.text()
-                        .content(" ● ")
-                        .style(Style.style(TextColor.color(0x18516),TextDecoration.ITALIC.withState(false)))
-                        .build()
-                        .append(
-                                Component.text()
-                                        .content("Evaluation: " + capitalizeFirst(value.toString()))
-                                        .style(Style.style(TextColor.color(0x18516),TextDecoration.ITALIC.withState(false)))
-                                        .build()
-                        )
-        ).addLine(
-                Component.text()
-                        .content(" ● ")
-                        .style(Style.style(TextColor.color(0x18516),TextDecoration.ITALIC.withState(false)))
-                        .build()
-                        .append(
-                                Component.text()
-                                        .content("Sell Value: $"+baseValues[getValueAsIndex(value)]* sellMultiplier *getMaterialBasedSellMultiplier(CorvidAgricultureItems.PRICKLY_PEAR))
-                                        .style(Style.style(TextColor.color(0x18516),TextDecoration.ITALIC.withState(false)))
-                                        .build()
-                        )
-        ).build();
-        bktStack.setData(DataComponentTypes.LORE,lore);
-
-
-
-        ItemStack itemStack = CraftItemStack.asNMSCopy(bktStack);
-        CompoundTag root = new CompoundTag();
-
-        CompoundTag tag = new CompoundTag();
-        tag.putString("value",value.toString().toLowerCase());
-        tag.putString("item_type",CorvidAgricultureItems.PRICKLY_PEAR.name().toLowerCase());
-
-        root.put("corvidagriculture",tag);
-
-        itemStack.set(DataComponents.CUSTOM_DATA,CustomData.of(root));
-
-        return itemStack;
-    }
     private static ItemStack buildCranberry(){
         Value value = randomValue();
         org.bukkit.inventory.ItemStack bktStack = new org.bukkit.inventory.ItemStack(Material.MUSIC_DISC_5);
@@ -333,7 +261,7 @@ public class ItemHandler {
                         .build()
                         .append(
                                 Component.text()
-                                        .content("Sell Value: $"+baseValues[getValueAsIndex(value)]* sellMultiplier *getMaterialBasedSellMultiplier(CorvidAgricultureItems.CRANBERRY))
+                                        .content("Sell Value: $"+baseValues[getValueAsIndex(value)]* sellMultiplier *getMaterialBasedSellMultiplier(Crops.CRANBERRY))
                                         .style(Style.style(TextColor.color(0x18516),TextDecoration.ITALIC.withState(false)))
                                         .build()
                         )
@@ -345,7 +273,348 @@ public class ItemHandler {
 
         CompoundTag tag = new CompoundTag();
         tag.putString("value",value.toString().toLowerCase());
-        tag.putString("item_type",CorvidAgricultureItems.CRANBERRY.name().toLowerCase());
+        tag.putString("item_type", Crops.CRANBERRY.name().toLowerCase());
+
+        root.put("corvidagriculture",tag);
+
+        itemStack.set(DataComponents.CUSTOM_DATA,CustomData.of(root));
+
+        return itemStack;
+    }
+    private static ItemStack buildCranberrySeeds(){
+        org.bukkit.inventory.ItemStack bktStack = new org.bukkit.inventory.ItemStack(Material.OAK_SAPLING);
+
+        bktStack.setData(DataComponentTypes.ITEM_MODEL,
+                Material.BEETROOT_SEEDS.getDefaultData(DataComponentTypes.ITEM_MODEL)
+        );
+        bktStack.setData(DataComponentTypes.MAX_STACK_SIZE,64);
+        bktStack.setData(DataComponentTypes.RARITY,ItemRarity.COMMON);
+        bktStack.setData(DataComponentTypes.ITEM_NAME,
+                Component.text()
+                        .content("Cranberry Seeds")
+                        .style(Style.style(TextDecoration.ITALIC.withState(false)))
+                        .build()
+        );
+
+        ItemLore lore = ItemLore.lore().addLine(
+                Component.text("")
+        ).addLine(
+                Component.text()
+                        .content("Grows a cranberry bush.")
+                        .style(Style.style(TextColor.color(0xAAAAAA),TextDecoration.ITALIC.withState(false))
+                        ).build()
+        ).build();
+        bktStack.setData(DataComponentTypes.LORE,lore);
+
+        ItemStack itemStack = CraftItemStack.asNMSCopy(bktStack);
+        CompoundTag root = new CompoundTag();
+
+        CompoundTag tag = new CompoundTag();
+        tag.putString("item_type", Seeds.CRANBERRY_SEEDS.name().toLowerCase());
+
+        root.put("corvidagriculture",tag);
+
+        itemStack.set(DataComponents.CUSTOM_DATA,CustomData.of(root));
+
+        return itemStack;
+    }
+
+    private static ItemStack buildBlueberry(){
+        Value value = randomValue();
+        org.bukkit.inventory.ItemStack bktStack = new org.bukkit.inventory.ItemStack(Material.MUSIC_DISC_5);
+        bktStack.unsetData(DataComponentTypes.JUKEBOX_PLAYABLE);
+        bktStack.setData(DataComponentTypes.FOOD, FoodProperties.food()
+                .nutrition(3)
+                .saturation((float)1.5)
+                .build()
+        );
+        bktStack.setData(DataComponentTypes.CONSUMABLE, Consumable.consumable()
+                .consumeSeconds((float)0.8)
+                .hasConsumeParticles(false)
+                .build());
+        bktStack.setData(DataComponentTypes.ITEM_MODEL,
+                Material.PLAYER_HEAD.getDefaultData(DataComponentTypes.ITEM_MODEL)
+        );
+        bktStack.setData(DataComponentTypes.PROFILE,getProfile("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNDI2OTdmM2VmOGY0NjI5YjY0NWZkMmU2NDQ2NDEzMjRhMWMxMTgzNTQ5OGU2MzhmNzU3ZjI3OGFmYmNlNWRiMSJ9fX0="));
+        bktStack.setData(DataComponentTypes.MAX_STACK_SIZE,64);
+        bktStack.setData(DataComponentTypes.RARITY,ItemRarity.COMMON);
+        bktStack.setData(DataComponentTypes.ITEM_NAME,
+                Component.text()
+                        .content("Blueberry")
+                        .style(Style.style(TextDecoration.ITALIC.withState(false)))
+                        .build()
+        );
+
+        //Set item "lore" -- Sell value, show rating value etc
+        ItemLore lore = ItemLore.lore().addLine(
+                Component.text()
+                        .content("Obtained when harvesting a blueberry bush")
+                        .style(Style.style(TextColor.color(0xAAAAAA),TextDecoration.ITALIC.withState(false)))
+        ).addLine(Component.text("")
+        ).addLine(
+                Component.text()
+                        .content("Information:")
+                        .style(Style.style(TextColor.color(0xCBB9),TextDecoration.ITALIC.withState(false),TextDecoration.BOLD))
+                        .build()
+        ).addLine(
+                Component.text()
+                        .content(" ● ")
+                        .style(Style.style(TextColor.color(0x18516),TextDecoration.ITALIC.withState(false)))
+                        .build()
+                        .append(
+                                Component.text()
+                                        .content("Evaluation: " + capitalizeFirst(value.toString()))
+                                        .style(Style.style(TextColor.color(0x18516),TextDecoration.ITALIC.withState(false)))
+                                        .build()
+                        )
+        ).addLine(
+                Component.text()
+                        .content(" ● ")
+                        .style(Style.style(TextColor.color(0x18516),TextDecoration.ITALIC.withState(false)))
+                        .build()
+                        .append(
+                                Component.text()
+                                        .content("Sell Value: $"+baseValues[getValueAsIndex(value)]* sellMultiplier *getMaterialBasedSellMultiplier(Crops.BLUEBERRY))
+                                        .style(Style.style(TextColor.color(0x18516),TextDecoration.ITALIC.withState(false)))
+                                        .build()
+                        )
+        ).build();
+        bktStack.setData(DataComponentTypes.LORE,lore);
+
+        ItemStack itemStack = CraftItemStack.asNMSCopy(bktStack);
+        CompoundTag root = new CompoundTag();
+
+        CompoundTag tag = new CompoundTag();
+        tag.putString("value",value.toString().toLowerCase());
+        tag.putString("item_type", Crops.BLUEBERRY.name().toLowerCase());
+
+        root.put("corvidagriculture",tag);
+
+        itemStack.set(DataComponents.CUSTOM_DATA,CustomData.of(root));
+
+        return itemStack;
+    }
+    private static ItemStack buildBlueberrySeeds(){
+        org.bukkit.inventory.ItemStack bktStack = new org.bukkit.inventory.ItemStack(Material.OAK_SAPLING);
+
+        bktStack.setData(DataComponentTypes.ITEM_MODEL,
+                Material.BEETROOT_SEEDS.getDefaultData(DataComponentTypes.ITEM_MODEL)
+        );
+        bktStack.setData(DataComponentTypes.MAX_STACK_SIZE,64);
+        bktStack.setData(DataComponentTypes.RARITY,ItemRarity.COMMON);
+        bktStack.setData(DataComponentTypes.ITEM_NAME,
+                Component.text()
+                        .content("Blueberry Seeds")
+                        .style(Style.style(TextDecoration.ITALIC.withState(false)))
+                        .build()
+        );
+
+        ItemLore lore = ItemLore.lore().addLine(
+                Component.text("")
+        ).addLine(
+                Component.text()
+                        .content("Grows a blueberry bush.")
+                        .style(Style.style(TextColor.color(0xAAAAAA),TextDecoration.ITALIC.withState(false))
+                        ).build()
+        ).build();
+        bktStack.setData(DataComponentTypes.LORE,lore);
+
+        ItemStack itemStack = CraftItemStack.asNMSCopy(bktStack);
+        CompoundTag root = new CompoundTag();
+
+        CompoundTag tag = new CompoundTag();
+        tag.putString("item_type", Seeds.BLUEBERRY_SEEDS.name().toLowerCase());
+
+        root.put("corvidagriculture",tag);
+
+        itemStack.set(DataComponents.CUSTOM_DATA,CustomData.of(root));
+
+        return itemStack;
+    }
+
+    private static ItemStack buildLemon(){
+        Value value = randomValue();
+        org.bukkit.inventory.ItemStack bktStack = new org.bukkit.inventory.ItemStack(Material.MUSIC_DISC_5);
+        bktStack.unsetData(DataComponentTypes.JUKEBOX_PLAYABLE);
+        bktStack.setData(DataComponentTypes.FOOD, FoodProperties.food()
+                .nutrition(3)
+                .saturation((float)1.5)
+                .build()
+        );
+        bktStack.setData(DataComponentTypes.CONSUMABLE, Consumable.consumable()
+                .consumeSeconds((float)1.6)
+                .hasConsumeParticles(false)
+                .build());
+        bktStack.setData(DataComponentTypes.ITEM_MODEL,
+                Material.PLAYER_HEAD.getDefaultData(DataComponentTypes.ITEM_MODEL)
+        );
+        bktStack.setData(DataComponentTypes.PROFILE,getProfile("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNDM3OGI1ODJkMTljY2M1NWIwMjNlYjgyZWRhMjcxYmFjNDc0NGZhMjAwNmNmNWUxOTAyNDZlMmI0ZDVkIn19fQ=="));
+        bktStack.setData(DataComponentTypes.MAX_STACK_SIZE,64);
+        bktStack.setData(DataComponentTypes.RARITY,ItemRarity.COMMON);
+        bktStack.setData(DataComponentTypes.ITEM_NAME,
+                Component.text()
+                        .content("Lemon")
+                        .style(Style.style(TextDecoration.ITALIC.withState(false)))
+                        .build()
+        );
+
+        //Set item "lore" -- Sell value, show rating value etc
+        ItemLore lore = ItemLore.lore().addLine(
+                Component.text()
+                        .content("Obtained from harvesting lemons off of trees")
+                        .style(Style.style(TextColor.color(0xAAAAAA),TextDecoration.ITALIC.withState(false)))
+        ).addLine(Component.text("")
+        ).addLine(
+                Component.text()
+                        .content("Information:")
+                        .style(Style.style(TextColor.color(0xCBB9),TextDecoration.ITALIC.withState(false),TextDecoration.BOLD))
+                        .build()
+        ).addLine(
+                Component.text()
+                        .content(" ● ")
+                        .style(Style.style(TextColor.color(0x18516),TextDecoration.ITALIC.withState(false)))
+                        .build()
+                        .append(
+                                Component.text()
+                                        .content("Evaluation: " + capitalizeFirst(value.toString()))
+                                        .style(Style.style(TextColor.color(0x18516),TextDecoration.ITALIC.withState(false)))
+                                        .build()
+                        )
+        ).addLine(
+                Component.text()
+                        .content(" ● ")
+                        .style(Style.style(TextColor.color(0x18516),TextDecoration.ITALIC.withState(false)))
+                        .build()
+                        .append(
+                                Component.text()
+                                        .content("Sell Value: $"+baseValues[getValueAsIndex(value)]* sellMultiplier *getMaterialBasedSellMultiplier(Crops.LEMON))
+                                        .style(Style.style(TextColor.color(0x18516),TextDecoration.ITALIC.withState(false)))
+                                        .build()
+                        )
+        ).build();
+        bktStack.setData(DataComponentTypes.LORE,lore);
+
+        ItemStack itemStack = CraftItemStack.asNMSCopy(bktStack);
+        CompoundTag root = new CompoundTag();
+
+        CompoundTag tag = new CompoundTag();
+        tag.putString("value",value.toString().toLowerCase());
+        tag.putString("item_type", Crops.LEMON.name().toLowerCase());
+
+        root.put("corvidagriculture",tag);
+
+        itemStack.set(DataComponents.CUSTOM_DATA,CustomData.of(root));
+
+        return itemStack;
+    }
+    private static ItemStack buildLemonTreeSapling(){
+        org.bukkit.inventory.ItemStack bktStack = new org.bukkit.inventory.ItemStack(Material.OAK_SAPLING);
+
+        bktStack.setData(DataComponentTypes.ITEM_MODEL,
+                Material.OAK_SAPLING.getDefaultData(DataComponentTypes.ITEM_MODEL)
+        );
+        bktStack.setData(DataComponentTypes.MAX_STACK_SIZE,64);
+        bktStack.setData(DataComponentTypes.RARITY,ItemRarity.COMMON);
+        bktStack.setData(DataComponentTypes.ITEM_NAME,
+                Component.text()
+                        .content("Lemon Tree Sapling")
+                        .style(Style.style(TextDecoration.ITALIC.withState(false)))
+                        .build()
+        );
+
+        ItemLore lore = ItemLore.lore().addLine(
+                Component.text("")
+        ).addLine(
+                Component.text()
+                        .content("Grows a lemon tree.")
+                        .style(Style.style(TextColor.color(0xAAAAAA),TextDecoration.ITALIC.withState(false))
+                ).build()
+        ).build();
+        bktStack.setData(DataComponentTypes.LORE,lore);
+
+        ItemStack itemStack = CraftItemStack.asNMSCopy(bktStack);
+        CompoundTag root = new CompoundTag();
+
+        CompoundTag tag = new CompoundTag();
+        tag.putString("item_type", Seeds.LEMON_TREE_SAPLING.name().toLowerCase());
+
+        root.put("corvidagriculture",tag);
+
+        itemStack.set(DataComponents.CUSTOM_DATA,CustomData.of(root));
+
+        return itemStack;
+    }
+
+    private static ItemStack buildPricklyPear(){
+        Value value = randomValue();
+        org.bukkit.inventory.ItemStack bktStack = new org.bukkit.inventory.ItemStack(Material.MUSIC_DISC_5);
+        bktStack.unsetData(DataComponentTypes.JUKEBOX_PLAYABLE);
+        bktStack.setData(DataComponentTypes.CONSUMABLE, Consumable.consumable()
+                .hasConsumeParticles(false)
+                .build());
+        bktStack.setData(DataComponentTypes.FOOD, FoodProperties.food()
+                .canAlwaysEat(false)
+                .nutrition(3)
+                .saturation((float)3.6)
+                .build()
+        );
+        bktStack.setData(DataComponentTypes.ITEM_MODEL,
+                Material.PLAYER_HEAD.getDefaultData(DataComponentTypes.ITEM_MODEL)
+        );
+        bktStack.setData(DataComponentTypes.PROFILE,getProfile("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNWQzNWVlZGQ0MDg5NTU3NmJlMmJiNDNhOWRjNzllYjdhOWYwMGJmNDg4MjFjYzEwZjQ1N2JlMzMyOWMxZmFkZSJ9fX0="));
+        bktStack.setData(DataComponentTypes.MAX_STACK_SIZE,64);
+        bktStack.setData(DataComponentTypes.RARITY,ItemRarity.COMMON);
+        bktStack.setData(DataComponentTypes.ITEM_NAME,
+                Component.text()
+                        .content("Prickly Pear")
+                        .style(Style.style(TextDecoration.ITALIC.withState(false)))
+                        .build()
+        );
+
+        //Set item "lore" -- Sell value, show rating value etc
+        ItemLore lore = ItemLore.lore().addLine(
+                Component.text()
+                        .content("Grows by chance off of a two tall cactus")
+                        .style(Style.style(TextColor.color(0xAAAAAA),TextDecoration.ITALIC.withState(false)))
+        ).addLine(Component.text("")
+        ).addLine(
+                Component.text()
+                        .content("Information:")
+                        .style(Style.style(TextColor.color(0xCBB9),TextDecoration.ITALIC.withState(false),TextDecoration.BOLD))
+                        .build()
+        ).addLine(
+                Component.text()
+                        .content(" ● ")
+                        .style(Style.style(TextColor.color(0x18516),TextDecoration.ITALIC.withState(false)))
+                        .build()
+                        .append(
+                                Component.text()
+                                        .content("Evaluation: " + capitalizeFirst(value.toString()))
+                                        .style(Style.style(TextColor.color(0x18516),TextDecoration.ITALIC.withState(false)))
+                                        .build()
+                        )
+        ).addLine(
+                Component.text()
+                        .content(" ● ")
+                        .style(Style.style(TextColor.color(0x18516),TextDecoration.ITALIC.withState(false)))
+                        .build()
+                        .append(
+                                Component.text()
+                                        .content("Sell Value: $"+baseValues[getValueAsIndex(value)]* sellMultiplier *getMaterialBasedSellMultiplier(Crops.PRICKLY_PEAR))
+                                        .style(Style.style(TextColor.color(0x18516),TextDecoration.ITALIC.withState(false)))
+                                        .build()
+                        )
+        ).build();
+        bktStack.setData(DataComponentTypes.LORE,lore);
+
+
+
+        ItemStack itemStack = CraftItemStack.asNMSCopy(bktStack);
+        CompoundTag root = new CompoundTag();
+
+        CompoundTag tag = new CompoundTag();
+        tag.putString("value",value.toString().toLowerCase());
+        tag.putString("item_type", Crops.PRICKLY_PEAR.name().toLowerCase());
 
         root.put("corvidagriculture",tag);
 
@@ -359,6 +628,54 @@ public class ItemHandler {
         return s.substring(0,1).toUpperCase()+s.substring(1);
     }
 
+    private static ItemStack buildApple(){
+        Value value = randomValue();
+        org.bukkit.inventory.ItemStack bktStack = new org.bukkit.inventory.ItemStack(Material.APPLE);
+        //Set item "lore" -- Sell value, show rating value etc
+        ItemLore lore = ItemLore.lore().addLine(Component.text("")
+        ).addLine(
+                Component.text()
+                        .content("Information:")
+                        .style(Style.style(TextColor.color(0xCBB9),TextDecoration.ITALIC.withState(false),TextDecoration.BOLD))
+                        .build()
+        ).addLine(
+                Component.text()
+                        .content(" ● ")
+                        .style(Style.style(TextColor.color(0x18516),TextDecoration.ITALIC.withState(false)))
+                        .build()
+                        .append(
+                                Component.text()
+                                        .content("Evaluation: " + capitalizeFirst(value.toString()))
+                                        .style(Style.style(TextColor.color(0x18516),TextDecoration.ITALIC.withState(false)))
+                                        .build()
+                        )
+        ).addLine(
+                Component.text()
+                        .content(" ● ")
+                        .style(Style.style(TextColor.color(0x18516),TextDecoration.ITALIC.withState(false)))
+                        .build()
+                        .append(
+                                Component.text()
+                                        .content("Sell Value: $"+baseValues[getValueAsIndex(value)]* sellMultiplier *getMaterialBasedSellMultiplier(Crops.CARROT))
+                                        .style(Style.style(TextColor.color(0x18516),TextDecoration.ITALIC.withState(false)))
+                                        .build()
+                        )
+        ).build();
+        bktStack.setData(DataComponentTypes.LORE,lore);
+
+        ItemStack itemStack = CraftItemStack.asNMSCopy(bktStack);
+        CompoundTag root = new CompoundTag();
+
+        CompoundTag tag = new CompoundTag();
+        tag.putString("value",value.toString().toLowerCase());
+        tag.putString("item_type","apple");
+
+        root.put("corvidagriculture",tag);
+
+        itemStack.set(DataComponents.CUSTOM_DATA,CustomData.of(root));
+
+        return itemStack;
+    }
     private static ItemStack buildBeetroot(){
         Value value = randomValue();
         org.bukkit.inventory.ItemStack bktStack = new org.bukkit.inventory.ItemStack(Material.BEETROOT);
@@ -387,7 +704,7 @@ public class ItemHandler {
                         .build()
                         .append(
                                 Component.text()
-                                        .content("Sell Value: $"+baseValues[getValueAsIndex(value)]* sellMultiplier *getMaterialBasedSellMultiplier(CorvidAgricultureItems.BEETROOT))
+                                        .content("Sell Value: $"+baseValues[getValueAsIndex(value)]* sellMultiplier *getMaterialBasedSellMultiplier(Crops.BEETROOT))
                                         .style(Style.style(TextColor.color(0x18516),TextDecoration.ITALIC.withState(false)))
                                         .build()
                         )
@@ -437,7 +754,7 @@ public class ItemHandler {
                                 Component.text()
                                         .content("Sell Value: $"+baseValues[getValueAsIndex(value)]
                                                 *sellMultiplier
-                                                *getMaterialBasedSellMultiplier(CorvidAgricultureItems.CACTUS))
+                                                *getMaterialBasedSellMultiplier(Crops.CACTUS))
                                         .style(Style.style(TextColor.color(0x18516),TextDecoration.ITALIC.withState(false)))
                                         .build()
                         )
@@ -485,7 +802,7 @@ public class ItemHandler {
                         .build()
                         .append(
                                 Component.text()
-                                        .content("Sell Value: $"+baseValues[getValueAsIndex(value)]* sellMultiplier *getMaterialBasedSellMultiplier(CorvidAgricultureItems.CARROT))
+                                        .content("Sell Value: $"+baseValues[getValueAsIndex(value)]* sellMultiplier *getMaterialBasedSellMultiplier(Crops.CARROT))
                                         .style(Style.style(TextColor.color(0x18516),TextDecoration.ITALIC.withState(false)))
                                         .build()
                         )
@@ -498,6 +815,54 @@ public class ItemHandler {
         CompoundTag tag = new CompoundTag();
         tag.putString("value",value.toString().toLowerCase());
         tag.putString("item_type","carrot");
+
+        root.put("corvidagriculture",tag);
+
+        itemStack.set(DataComponents.CUSTOM_DATA,CustomData.of(root));
+
+        return itemStack;
+    }
+    private static ItemStack buildChorusFruit(){
+        Value value = randomValue();
+        org.bukkit.inventory.ItemStack bktStack = new org.bukkit.inventory.ItemStack(Material.CHORUS_FRUIT);
+        //Set item "lore" -- Sell value, show rating value etc
+        ItemLore lore = ItemLore.lore().addLine(Component.text("")
+        ).addLine(
+                Component.text()
+                        .content("Information:")
+                        .style(Style.style(TextColor.color(0xCBB9),TextDecoration.ITALIC.withState(false),TextDecoration.BOLD))
+                        .build()
+        ).addLine(
+                Component.text()
+                        .content(" ● ")
+                        .style(Style.style(TextColor.color(0x18516),TextDecoration.ITALIC.withState(false)))
+                        .build()
+                        .append(
+                                Component.text()
+                                        .content("Evaluation: " + capitalizeFirst(value.toString()))
+                                        .style(Style.style(TextColor.color(0x18516),TextDecoration.ITALIC.withState(false)))
+                                        .build()
+                        )
+        ).addLine(
+                Component.text()
+                        .content(" ● ")
+                        .style(Style.style(TextColor.color(0x18516),TextDecoration.ITALIC.withState(false)))
+                        .build()
+                        .append(
+                                Component.text()
+                                        .content("Sell Value: $"+baseValues[getValueAsIndex(value)]* sellMultiplier *getMaterialBasedSellMultiplier(Crops.CARROT))
+                                        .style(Style.style(TextColor.color(0x18516),TextDecoration.ITALIC.withState(false)))
+                                        .build()
+                        )
+        ).build();
+        bktStack.setData(DataComponentTypes.LORE,lore);
+
+        ItemStack itemStack = CraftItemStack.asNMSCopy(bktStack);
+        CompoundTag root = new CompoundTag();
+
+        CompoundTag tag = new CompoundTag();
+        tag.putString("value",value.toString().toLowerCase());
+        tag.putString("item_type","chorus_fruit");
 
         root.put("corvidagriculture",tag);
 
@@ -533,7 +898,7 @@ public class ItemHandler {
                         .build()
                         .append(
                                 Component.text()
-                                        .content("Sell Value: $"+baseValues[getValueAsIndex(value)]* sellMultiplier *getMaterialBasedSellMultiplier(CorvidAgricultureItems.COCOA_BEANS))
+                                        .content("Sell Value: $"+baseValues[getValueAsIndex(value)]* sellMultiplier *getMaterialBasedSellMultiplier(Crops.COCOA_BEANS))
                                         .style(Style.style(TextColor.color(0x18516),TextDecoration.ITALIC.withState(false)))
                                         .build()
                         )
@@ -546,6 +911,54 @@ public class ItemHandler {
         CompoundTag tag = new CompoundTag();
         tag.putString("value",value.toString().toLowerCase());
         tag.putString("item_type","cocoa_beans");
+
+        root.put("corvidagriculture",tag);
+
+        itemStack.set(DataComponents.CUSTOM_DATA,CustomData.of(root));
+
+        return itemStack;
+    }
+    private static ItemStack buildGlowBerries(){
+        Value value = randomValue();
+        org.bukkit.inventory.ItemStack bktStack = new org.bukkit.inventory.ItemStack(Material.GLOW_BERRIES);
+        //Set item "lore" -- Sell value, show rating value etc
+        ItemLore lore = ItemLore.lore().addLine(Component.text("")
+        ).addLine(
+                Component.text()
+                        .content("Information:")
+                        .style(Style.style(TextColor.color(0xCBB9),TextDecoration.ITALIC.withState(false),TextDecoration.BOLD))
+                        .build()
+        ).addLine(
+                Component.text()
+                        .content(" ● ")
+                        .style(Style.style(TextColor.color(0x18516),TextDecoration.ITALIC.withState(false)))
+                        .build()
+                        .append(
+                                Component.text()
+                                        .content("Evaluation: " + capitalizeFirst(value.toString()))
+                                        .style(Style.style(TextColor.color(0x18516),TextDecoration.ITALIC.withState(false)))
+                                        .build()
+                        )
+        ).addLine(
+                Component.text()
+                        .content(" ● ")
+                        .style(Style.style(TextColor.color(0x18516),TextDecoration.ITALIC.withState(false)))
+                        .build()
+                        .append(
+                                Component.text()
+                                        .content("Sell Value: $"+baseValues[getValueAsIndex(value)]* sellMultiplier *getMaterialBasedSellMultiplier(Crops.CARROT))
+                                        .style(Style.style(TextColor.color(0x18516),TextDecoration.ITALIC.withState(false)))
+                                        .build()
+                        )
+        ).build();
+        bktStack.setData(DataComponentTypes.LORE,lore);
+
+        ItemStack itemStack = CraftItemStack.asNMSCopy(bktStack);
+        CompoundTag root = new CompoundTag();
+
+        CompoundTag tag = new CompoundTag();
+        tag.putString("value",value.toString().toLowerCase());
+        tag.putString("item_type","glow_berries");
 
         root.put("corvidagriculture",tag);
 
@@ -581,7 +994,7 @@ public class ItemHandler {
                         .build()
                         .append(
                                 Component.text()
-                                        .content("Sell Value: $"+baseValues[getValueAsIndex(value)]* sellMultiplier *getMaterialBasedSellMultiplier(CorvidAgricultureItems.MELON_SLICE))
+                                        .content("Sell Value: $"+baseValues[getValueAsIndex(value)]* sellMultiplier *getMaterialBasedSellMultiplier(Crops.MELON_SLICE))
                                         .style(Style.style(TextColor.color(0x18516),TextDecoration.ITALIC.withState(false)))
                                         .build()
                         )
@@ -629,7 +1042,7 @@ public class ItemHandler {
                         .build()
                         .append(
                                 Component.text()
-                                        .content("Sell Value: $"+baseValues[getValueAsIndex(value)]* sellMultiplier *getMaterialBasedSellMultiplier(CorvidAgricultureItems.NETHER_WART))
+                                        .content("Sell Value: $"+baseValues[getValueAsIndex(value)]* sellMultiplier *getMaterialBasedSellMultiplier(Crops.NETHER_WART))
                                         .style(Style.style(TextColor.color(0x18516),TextDecoration.ITALIC.withState(false)))
                                         .build()
                         )
@@ -677,7 +1090,7 @@ public class ItemHandler {
                         .build()
                         .append(
                                 Component.text()
-                                        .content("Sell Value: $"+baseValues[getValueAsIndex(value)]* sellMultiplier *getMaterialBasedSellMultiplier(CorvidAgricultureItems.POTATO))
+                                        .content("Sell Value: $"+baseValues[getValueAsIndex(value)]* sellMultiplier *getMaterialBasedSellMultiplier(Crops.POTATO))
                                         .style(Style.style(TextColor.color(0x18516),TextDecoration.ITALIC.withState(false)))
                                         .build()
                         )
@@ -725,7 +1138,7 @@ public class ItemHandler {
                         .build()
                         .append(
                                 Component.text()
-                                        .content("Sell Value: $"+baseValues[getValueAsIndex(value)]* sellMultiplier *getMaterialBasedSellMultiplier(CorvidAgricultureItems.PUMPKIN))
+                                        .content("Sell Value: $"+baseValues[getValueAsIndex(value)]* sellMultiplier *getMaterialBasedSellMultiplier(Crops.PUMPKIN))
                                         .style(Style.style(TextColor.color(0x18516),TextDecoration.ITALIC.withState(false)))
                                         .build()
                         )
@@ -773,7 +1186,7 @@ public class ItemHandler {
                         .build()
                         .append(
                                 Component.text()
-                                        .content("Sell Value: $"+baseValues[getValueAsIndex(value)]* sellMultiplier *getMaterialBasedSellMultiplier(CorvidAgricultureItems.SUGAR_CANE))
+                                        .content("Sell Value: $"+baseValues[getValueAsIndex(value)]* sellMultiplier *getMaterialBasedSellMultiplier(Crops.SUGAR_CANE))
                                         .style(Style.style(TextColor.color(0x18516),TextDecoration.ITALIC.withState(false)))
                                         .build()
                         )
@@ -821,7 +1234,7 @@ public class ItemHandler {
                         .build()
                         .append(
                                 Component.text()
-                                        .content("Sell Value: $"+baseValues[getValueAsIndex(value)]* sellMultiplier *getMaterialBasedSellMultiplier(CorvidAgricultureItems.SWEET_BERRIES))
+                                        .content("Sell Value: $"+baseValues[getValueAsIndex(value)]* sellMultiplier *getMaterialBasedSellMultiplier(Crops.SWEET_BERRIES))
                                         .style(Style.style(TextColor.color(0x18516),TextDecoration.ITALIC.withState(false)))
                                         .build()
                         )
@@ -869,7 +1282,7 @@ public class ItemHandler {
                         .build()
                         .append(
                                 Component.text()
-                                        .content("Sell Value: $"+baseValues[getValueAsIndex(value)]* sellMultiplier *getMaterialBasedSellMultiplier(CorvidAgricultureItems.WHEAT))
+                                        .content("Sell Value: $"+baseValues[getValueAsIndex(value)]* sellMultiplier *getMaterialBasedSellMultiplier(Crops.WHEAT))
                                         .style(Style.style(TextColor.color(0x18516),TextDecoration.ITALIC.withState(false)))
                                         .build()
                         )
@@ -890,13 +1303,10 @@ public class ItemHandler {
         return itemStack;
     }
 
-    public static ItemStack buildItem(CorvidAgricultureItems item){
+    public static ItemStack buildItem(Crops item){
         // People tell me enhanced switches are hard to read, but these are
         // way better than compounding ternary operations or loads of ifs
         return switch (item) {
-            case CROW_FEATHER -> buildCrowFeather();
-            case INSECT_CARAPACE -> buildInsectCarapace();
-            case INSECT_LARVAE -> buildInsectLarvae();
             case WHEAT -> buildWheat();
             case CARROT -> buildCarrot();
             case POTATO -> buildPotato();
@@ -908,13 +1318,96 @@ public class ItemHandler {
             case COCOA_BEANS -> buildCocoaBeans();
             case SUGAR_CANE -> buildSugarCane();
             case CACTUS -> buildCactus();
+            case APPLE -> buildApple();
+            case GLOW_BERRIES -> buildGlowBerries();
+            case CHORUS_FRUIT -> buildChorusFruit();
             case PRICKLY_PEAR -> buildPricklyPear();
             case CRANBERRY -> buildCranberry();
-            case null, default -> null;
+            case LEMON -> buildLemon();
+            case BLUEBERRY -> buildBlueberry();
         };
     }
-    public static org.bukkit.inventory.ItemStack buildItemBkt(CorvidAgricultureItems item){
-        return buildItem(item)==null?null:CraftItemStack.asBukkitCopy(buildItem(item));
+    public static ItemStack buildItem(Seeds item) {
+        return switch (item) {
+            case LEMON_TREE_SAPLING -> buildLemonTreeSapling();
+            case CRANBERRY_SEEDS -> buildCranberrySeeds();
+            case BLUEBERRY_SEEDS -> buildBlueberrySeeds();
+        };
+    }
+    public static ItemStack buildItem(MobDrops item){
+        return switch (item){
+            case CROW_FEATHER -> buildCrowFeather();
+            case INSECT_CARAPACE -> buildInsectCarapace();
+            case INSECT_LARVAE -> buildInsectLarvae();
+            default -> throw new IllegalArgumentException("Non valid MobDrop item");
+        };
+    }
+
+    public static org.bukkit.inventory.ItemStack buildItemBkt(Crops item){
+        return CraftItemStack.asBukkitCopy(buildItem(item));
+    }
+    public static org.bukkit.inventory.ItemStack buildItemBkt(Seeds item){
+        return CraftItemStack.asBukkitCopy(buildItem(item));
+    }
+
+    public static void buildFruitBlock(Block block, Crops item) {
+        ItemStack fruitBlock = ItemHandler.buildItem(item);
+
+        plugin.getBerryLikeMap().put(block.getLocation(), new BerryLike(block.getLocation(), item));
+
+        if (block.getType() == Material.PLAYER_HEAD){
+            if (block.getBlockData() instanceof Rotatable rotatable) {
+                rotatable.setRotation(headFaces[(int) (Math.random() * headFaces.length)]);
+                block.setBlockData(rotatable);
+            }
+        }
+
+        BlockState state = block.getState();
+        if (!(state instanceof Skull skull)) return;
+
+        ResolvableProfile profile = fruitBlock.get(DataComponents.PROFILE);
+
+        if(profile==null)
+            throw new IllegalArgumentException("Illegal Crop Type");
+        try {
+            Field profileField = skull.getClass().getDeclaredField("profile");
+            profileField.setAccessible(true);
+            profileField.set(skull, profile);
+            profileField.setAccessible(false);
+            skull.update(true, false);
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            e.printStackTrace();
+        }
+    }
+    public static void buildFruitBlock(Block block, Crops item, BlockFace face){
+        ItemStack pear = ItemHandler.buildItem(item);
+
+        plugin.getBerryLikeMap().put(block.getLocation(), new BerryLike(block.getLocation(), item));
+
+        if (block.getType() == Material.PLAYER_WALL_HEAD){
+            if (block.getBlockData() instanceof Directional direction) {
+                direction.setFacing(face);
+                block.setBlockData(direction);
+            }
+        }
+
+        BlockState state = block.getState();
+        if (!(state instanceof Skull skull)) return;
+
+        ResolvableProfile profile = pear.get(DataComponents.PROFILE);
+
+        if(profile==null)
+            throw new IllegalArgumentException("Illegal Crop Type");
+
+        try {
+            Field profileField = skull.getClass().getDeclaredField("profile");
+            profileField.setAccessible(true);
+            profileField.set(skull, profile);
+            profileField.setAccessible(false);
+            skull.update(true, false);
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            e.printStackTrace();
+        }
     }
 
     private static Value getValue(ItemStack itemStack){
@@ -932,7 +1425,7 @@ public class ItemHandler {
             return null;
         }
     }
-    public static CorvidAgricultureItems getItemType(ItemStack itemStack) {
+    public static Crops getCropType(ItemStack itemStack) {
         CustomData data = itemStack.getComponents().get(DataComponents.CUSTOM_DATA);
         if(data==null)
             return null;
@@ -942,41 +1435,33 @@ public class ItemHandler {
 
         String str = tag.get("item_type")==null?null:tag.getString("item_type");
         try {
-            return CorvidAgricultureItems.valueOf(str.toUpperCase());
+            return Crops.valueOf(str.toUpperCase());
         } catch (Exception ignored){
             return null;
         }
 
     }
-    public static CorvidAgricultureItems getItemType(Material material){
-        return switch(material){
-            case BEETROOT -> CorvidAgricultureItems.BEETROOT;
-            case CARROT -> CorvidAgricultureItems.CARROT;
-            case POTATO -> CorvidAgricultureItems.POTATO;
-            case WHEAT -> CorvidAgricultureItems.WHEAT;
-            case MELON_SLICE -> CorvidAgricultureItems.MELON_SLICE;
-            case PUMPKIN -> CorvidAgricultureItems.PUMPKIN;
-            case NETHER_WART -> CorvidAgricultureItems.NETHER_WART;
-            case SWEET_BERRIES -> CorvidAgricultureItems.SWEET_BERRIES;
-            case COCOA_BEANS -> CorvidAgricultureItems.COCOA_BEANS;
-            case SUGAR_CANE -> CorvidAgricultureItems.SUGAR_CANE;
-            case CACTUS -> CorvidAgricultureItems.CACTUS;
-            default -> null;
-        };
+    public static Crops getCropType(org.bukkit.inventory.ItemStack itemStack){
+        return getCropType(CraftItemStack.asNMSCopy(itemStack));
     }
-    public static void spawnItemStack(ItemStack itemStack, int x, int y, int z, Level level){
-        ItemEntity item = new ItemEntity(level, x,y,z, itemStack);
-        level.getWorld().addEntity(item, CreatureSpawnEvent.SpawnReason.CUSTOM);
+
+    public static Seeds getSeedType(ItemStack itemStack) {
+        CustomData data = itemStack.getComponents().get(DataComponents.CUSTOM_DATA);
+        if(data==null)
+            return null;
+        CompoundTag tag = data.copyTag();
+
+        tag = tag.getCompound("corvidagriculture");
+
+        String str = tag.get("item_type")==null?null:tag.getString("item_type");
+        try {
+            return Seeds.valueOf(str.toUpperCase());
+        } catch (Exception ignored){
+            return null;
+        }
     }
-    public static org.bukkit.inventory.ItemStack createHead(String base64){
-        ItemStack itemStack = new ItemStack(Items.PLAYER_HEAD);
-        UUID name = UUID.nameUUIDFromBytes(base64.getBytes(StandardCharsets.UTF_8));
-        GameProfile profile = new GameProfile(name,name.toString());
-        profile.getProperties().put("textures",new Property("textures",base64));
-
-
-        itemStack.set(DataComponents.PROFILE, new ResolvableProfile(profile));
-        return CraftItemStack.asBukkitCopy(itemStack);
+    public static Seeds getSeedType(org.bukkit.inventory.ItemStack itemStack) {
+        return getSeedType(CraftItemStack.asNMSCopy(itemStack));
     }
     public static io.papermc.paper.datacomponent.item.ResolvableProfile getProfile(String base64){
         UUID name = UUID.nameUUIDFromBytes(base64.getBytes(StandardCharsets.UTF_8));
@@ -1003,3 +1488,4 @@ enum Value {
     EXEMPLARY,
     DIVINE
 }
+

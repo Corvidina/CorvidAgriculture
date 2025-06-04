@@ -13,9 +13,9 @@ permissions:
     descripion: Administrative player permissions
     default: op
 commands:
-  spawncustomentity:
-    description: Summons a custom entity
-    usage: /spawncustomentity (Entity name)
+  test:
+    description: Testing commands for development
+    usage: /test (Argument)
     permission: corvidagriculture.admin
   agriculture:
     description: Root command for CorvidAgriculture

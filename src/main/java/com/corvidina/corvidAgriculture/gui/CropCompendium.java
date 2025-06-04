@@ -1,13 +1,10 @@
 package com.corvidina.corvidAgriculture.gui;
 
-import com.corvidina.corvidAgriculture.items.CorvidAgricultureItems;
+import com.corvidina.corvidAgriculture.items.Crops;
 import com.corvidina.corvidAgriculture.items.ItemHandler;
-import com.mojang.brigadier.LiteralMessage;
 import io.papermc.paper.datacomponent.DataComponentTypes;
-import io.papermc.paper.datacomponent.item.ItemLore;
 import me.devnatan.inventoryframework.View;
 import me.devnatan.inventoryframework.ViewConfigBuilder;
-import me.devnatan.inventoryframework.ViewFrame;
 import me.devnatan.inventoryframework.ViewType;
 import me.devnatan.inventoryframework.context.OpenContext;
 import me.devnatan.inventoryframework.context.RenderContext;
@@ -16,9 +13,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.Style;
 import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.format.TextDecoration;
-import org.bukkit.Bukkit;
 import org.bukkit.Material;
-import org.bukkit.craftbukkit.inventory.CraftItemStack;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
@@ -67,9 +62,9 @@ public class CropCompendium extends View {
                 .onClick(context -> context.openForPlayer(AgricultureMenu.class));
 
         ItemHandler.setValueChances(weighed);
-        render.slot(2,2,ItemHandler.buildItemBkt(CorvidAgricultureItems.PRICKLY_PEAR))
+        render.slot(2,2,ItemHandler.buildItemBkt(Crops.PRICKLY_PEAR))
                 .onClick(this::clickedSlot);
-        render.slot(2,3,ItemHandler.buildItemBkt(CorvidAgricultureItems.CRANBERRY))
+        render.slot(2,3,ItemHandler.buildItemBkt(Crops.CRANBERRY))
                 .onClick(this::clickedSlot);
         ItemHandler.setValueChances(save);
 

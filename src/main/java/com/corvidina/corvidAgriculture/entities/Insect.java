@@ -1,6 +1,6 @@
 package com.corvidina.corvidAgriculture.entities;
 
-import com.corvidina.corvidAgriculture.items.CorvidAgricultureItems;
+import com.corvidina.corvidAgriculture.items.MobDrops;
 import com.corvidina.corvidAgriculture.items.ItemHandler;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
@@ -28,9 +28,9 @@ public class Insect extends Silverfish {
     public void postDeathDropItems(@NotNull EntityDeathEvent event){
         super.postDeathDropItems(event);
         if(Math.random()<0.2) {
-            ItemEntity item = new ItemEntity(level(), getX(), getY(), getZ(), ItemHandler.buildItem(CorvidAgricultureItems.INSECT_CARAPACE));
+            ItemEntity item = new ItemEntity(level(), getX(), getY(), getZ(), ItemHandler.buildItem(MobDrops.INSECT_CARAPACE));
             level().getWorld().addEntity(item, CreatureSpawnEvent.SpawnReason.CUSTOM);
-            item = new ItemEntity(level(), getX(), getY(), getZ(), ItemHandler.buildItem(CorvidAgricultureItems.INSECT_LARVAE));
+            item = new ItemEntity(level(), getX(), getY(), getZ(), ItemHandler.buildItem(MobDrops.INSECT_LARVAE));
             level().getWorld().addEntity(item, CreatureSpawnEvent.SpawnReason.CUSTOM);
         }
     }

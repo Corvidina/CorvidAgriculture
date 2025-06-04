@@ -1,11 +1,9 @@
 package com.corvidina.corvidAgriculture.entities;
 
-import com.corvidina.corvidAgriculture.items.CorvidAgricultureItems;
+import com.corvidina.corvidAgriculture.items.MobDrops;
 import com.corvidina.corvidAgriculture.items.ItemHandler;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.Style;
-import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.item.ItemEntity;
@@ -31,7 +29,7 @@ public class Crow extends Vex {
         super.tick();
         // Prevent phasing
         if (level().getBlockState(super.blockPosition()).getBukkitMaterial().isSolid()) {
-            super.setDeltaMovement(0, 0, 0);
+            super.setDeltaMovement(0, 0.2, 0);
             //Implement move out of block logic
         }
         this.setCustomName(
@@ -46,7 +44,7 @@ public class Crow extends Vex {
     public void postDeathDropItems(@NotNull EntityDeathEvent event){
         super.postDeathDropItems(event);
         if(Math.random()<0.33) {
-            ItemEntity item = new ItemEntity(level(), getX(), getY(), getZ(), ItemHandler.buildItem(CorvidAgricultureItems.CROW_FEATHER));
+            ItemEntity item = new ItemEntity(level(), getX(), getY(), getZ(), ItemHandler.buildItem(MobDrops.CROW_FEATHER));
             level().getWorld().addEntity(item, CreatureSpawnEvent.SpawnReason.CUSTOM);
         }
     }
@@ -57,7 +55,7 @@ public class Crow extends Vex {
     protected void registerGoals(){
         /*temporary*/ super.registerGoals();
 
-        //implement custom pathfinding eventually
+        //implement custom pathfinding eventually, possibly
 
     }
 
