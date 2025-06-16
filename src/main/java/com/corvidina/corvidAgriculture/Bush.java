@@ -1,6 +1,6 @@
 package com.corvidina.corvidAgriculture;
 
-import com.corvidina.corvidAgriculture.items.Crops;
+import com.corvidina.corvidAgriculture.items.Crop;
 import com.corvidina.corvidAgriculture.items.ItemHandler;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -17,7 +17,7 @@ public class Bush {
     private final boolean tall;
     private final String type;
 
-    public Bush(Location loc, Crops type, boolean tall){
+    public Bush(Location loc, Crop type, boolean tall){
         this.world=loc.getWorld().getName();
         this.x=loc.getBlockX();
         this.y=loc.getBlockY();
@@ -48,11 +48,11 @@ public class Bush {
         age=0;
     }
 
-    public Crops getType(){
-        return Crops.valueOf(type.toUpperCase());
+    public Crop getType(){
+        return Crop.valueOf(type.toUpperCase());
     }
 
-    public static Bush buildBush(Location loc, Crops type, boolean isTall){
+    public static Bush buildBush(Location loc, Crop type, boolean isTall){
         Bush bush = new Bush(loc,type,isTall);
         plugin.getBushMap().put(loc,bush);
         loc = loc.clone();
@@ -82,9 +82,9 @@ public class Bush {
             } else {
                 loc.add(0, -1, 0);
 
-                Bukkit.getServer().sendPlainMessage("made it to adj berries check");
+                //Bukkit.getServer().sendPlainMessage("made it to adj berries check");
                 if (getAdjacentBerries(loc)<2){
-                    Bukkit.getServer().sendPlainMessage("made it through adj berries check");
+                    //Bukkit.getServer().sendPlainMessage("made it through adj berries check");
                     switch ((int)(Math.random()*4)) {
                         case 0: {
                             loc.add(1,0,0);
@@ -137,7 +137,7 @@ public class Bush {
 
     public static void dropSeeds(Bush bush) {
         Location loc = bush.toLocation().add(0.5,0.5,0.5);
-        loc.getWorld().dropItemNaturally(loc,ItemHandler.buildItemBkt(Crops.getCorrespondingSeed(bush.getType())));
+        loc.getWorld().dropItemNaturally(loc,ItemHandler.buildItemBkt(Crop.getCorrespondingSeed(bush.getType())));
     }
 
     private static int getAdjacentBerries(Location loc){

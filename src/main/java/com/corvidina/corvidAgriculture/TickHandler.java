@@ -1,15 +1,10 @@
 package com.corvidina.corvidAgriculture;
 
 import com.corvidina.corvidAgriculture.items.ItemHandler;
-import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.scheduler.BukkitRunnable;
-
-import java.util.Set;
-import java.util.TreeMap;
 
 public class TickHandler extends BukkitRunnable {
     private final CorvidAgriculture plugin;
@@ -133,6 +128,24 @@ public class TickHandler extends BukkitRunnable {
                             break;
                         }
                     }
+                }
+            }
+        }
+
+        for (Location loc : plugin.getRiceMap().keySet()) {
+
+            if(loc.isChunkLoaded()) {
+                Rice rice = plugin.getRiceMap().get(loc);
+                if(loc.getBlock().getType()!=Material.KELP_PLANT&&loc.getBlock().getType()!=Material.KELP){
+                    plugin.getRiceMap().remove(loc);
+                    continue;
+                }
+                if(rice.getAge()<8 && Math.random() < 0.3){
+                    rice.incrementAge(1);
+                }
+                if (rice.getAge()>=8){
+                    Rice.growRice(rice);
+                    rice.resetAge();
                 }
             }
         }

@@ -1,6 +1,6 @@
 package com.corvidina.corvidAgriculture.gui;
 
-import com.corvidina.corvidAgriculture.items.Crops;
+import com.corvidina.corvidAgriculture.items.Crop;
 import com.corvidina.corvidAgriculture.items.ItemHandler;
 import io.papermc.paper.datacomponent.DataComponentTypes;
 import me.devnatan.inventoryframework.View;
@@ -62,9 +62,9 @@ public class CropCompendium extends View {
                 .onClick(context -> context.openForPlayer(AgricultureMenu.class));
 
         ItemHandler.setValueChances(weighed);
-        render.slot(2,2,ItemHandler.buildItemBkt(Crops.PRICKLY_PEAR))
+        render.slot(2,2,ItemHandler.buildItemBkt(Crop.PRICKLY_PEAR))
                 .onClick(this::clickedSlot);
-        render.slot(2,3,ItemHandler.buildItemBkt(Crops.CRANBERRY))
+        render.slot(2,3,ItemHandler.buildItemBkt(Crop.CRANBERRY))
                 .onClick(this::clickedSlot);
         ItemHandler.setValueChances(save);
 

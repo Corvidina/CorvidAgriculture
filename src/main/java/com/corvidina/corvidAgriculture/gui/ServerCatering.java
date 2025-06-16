@@ -1,5 +1,6 @@
 package com.corvidina.corvidAgriculture.gui;
 
+import com.corvidina.corvidAgriculture.CateringOption;
 import com.corvidina.corvidAgriculture.CorvidAgriculture;
 import io.papermc.paper.datacomponent.DataComponentTypes;
 import io.papermc.paper.datacomponent.item.ItemLore;
@@ -15,14 +16,17 @@ import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
+import org.checkerframework.checker.units.qual.A;
+
+import java.util.ArrayList;
 
 public class ServerCatering extends View {
-    private ItemStack itemStack;
+    private ArrayList<CateringOption.Options> lowDifficulty;
     @Override
     public void onInit(ViewConfigBuilder config){
         int rand = (int)(Math.random()*Material.values().length);
-        itemStack = new ItemStack(Material.values()[rand]);
-
+        lowDifficulty=new ArrayList<>();
+        reloadCaterings();
 
         config.type(ViewType.CHEST);
         config.cancelOnClick();
@@ -83,7 +87,7 @@ public class ServerCatering extends View {
         );
         render.slot(5,1,temp).onClick(this::openPlayerAgricultureMenu);
 
-        render.slot(2,3,itemStack);
+        render.slot(2,3,lowDifficulty.getFirst().getDisplayItem());
 
     }
 
@@ -95,7 +99,7 @@ public class ServerCatering extends View {
     public void reloadCaterings(){
         // Reloads the available catering options
 
-
+        lowDifficulty.add(CateringOption.Options.NICO_LEMONY_DELIVERY);
 
     }
 

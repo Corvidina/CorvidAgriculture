@@ -1,6 +1,6 @@
 package com.corvidina.corvidAgriculture;
 
-import com.corvidina.corvidAgriculture.items.Crops;
+import com.corvidina.corvidAgriculture.items.Crop;
 import com.corvidina.corvidAgriculture.items.ItemHandler;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -12,7 +12,7 @@ public class BerryLike {
     private final int x,y,z;
     private final String type;
 
-    public BerryLike(Location loc, Crops type){
+    public BerryLike(Location loc, Crop type){
         this.world=loc.getWorld().getName();
         this.x=loc.getBlockX();
         this.y=loc.getBlockY();
@@ -24,8 +24,8 @@ public class BerryLike {
         return new Location(Bukkit.getWorld(world),x,y,z);
     }
 
-    public Crops getType(){
-        return Crops.valueOf(type.toUpperCase());
+    public Crop getType(){
+        return Crop.valueOf(type.toUpperCase());
     }
 
     public static void breakBerry(BerryLike berry){

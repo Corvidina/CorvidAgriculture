@@ -3,11 +3,9 @@ package com.corvidina.corvidAgriculture;
 import com.corvidina.corvidAgriculture.commands.AgricultureCommand;
 import com.corvidina.corvidAgriculture.commands.TestCommand;
 import com.corvidina.corvidAgriculture.gui.ServerCatering;
-import com.corvidina.corvidAgriculture.items.Crops;
+import com.corvidina.corvidAgriculture.items.Crop;
 import com.corvidina.corvidAgriculture.items.ItemHandler;
-import com.corvidina.corvidAgriculture.listeners.BlockBreaks;
-import com.corvidina.corvidAgriculture.listeners.Grow;
-import com.corvidina.corvidAgriculture.listeners.PlayerInteracts;
+import com.corvidina.corvidAgriculture.listeners.*;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
@@ -15,7 +13,6 @@ import me.devnatan.inventoryframework.ViewFrame;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.yaml.snakeyaml.Yaml;
 
 import java.io.*;
 import java.lang.reflect.Type;
@@ -39,11 +36,17 @@ public final class CorvidAgriculture extends JavaPlugin {
     private ConcurrentHashMap<Location,FruitGrowingLeaves> growingLeavesMap;
     private final File growingLeavesFile = new File(getDataFolder(), "growing_leaves.json");
 
+    private ConcurrentHashMap<Location, Rice> riceMap;
+    private final File riceFile = new File(getDataFolder(), "rice.json");
+
+    private ConcurrentHashMap<Location, LettucePlant> lettucePlantMap;
+    private final File lettuceFile = new File(getDataFolder(), "lettuce_plant.json");
+
     private final File configFile = new File(getDataFolder(), "config.json");
 
 
     private double sellMultiplier;
-    private HashMap<Crops, Double> materialBasedSellMultiplier;
+    private HashMap<Crop, Double> materialBasedSellMultiplier;
 
     // final file names for trees
     private final String[] treeNames = new String[]{
@@ -66,7 +69,10 @@ public final class CorvidAgriculture extends JavaPlugin {
         loadBerryLikes();
         loadFruitTreeSaplings();
         loadGrowingLeaves();
+        loadRice();
+        loadLettucePlants();
         loadConfigs();
+
 
         getLogger().info("Hello world from CorvidAgriculture!");
 
@@ -108,7 +114,15 @@ public final class CorvidAgriculture extends JavaPlugin {
         return growingLeavesMap;
     }
 
-    public HashMap<Crops, Double> getMaterialBasedSellMultiplier(){
+    public ConcurrentHashMap<Location, Rice> getRiceMap(){
+        return riceMap;
+    }
+
+    public ConcurrentHashMap<Location, LettucePlant> getLettucePlantMap() {
+        return lettucePlantMap;
+    }
+
+    public HashMap<Crop, Double> getMaterialBasedSellMultiplier(){
         return materialBasedSellMultiplier;
     }
 
@@ -131,7 +145,9 @@ public final class CorvidAgriculture extends JavaPlugin {
     private void registerListeners(){
         getServer().getPluginManager().registerEvents(new Grow(),this);
         getServer().getPluginManager().registerEvents(new PlayerInteracts(), this);
+        getServer().getPluginManager().registerEvents(new PlayerCrafts(), this);
         getServer().getPluginManager().registerEvents(new BlockBreaks(), this);
+        getServer().getPluginManager().registerEvents(new CancelPhysics(), this);
     }
 
     private void registerCommands(){
@@ -148,7 +164,56 @@ public final class CorvidAgriculture extends JavaPlugin {
         saveBerryLikes();
         saveFruitTreeSaplings();
         saveGrowingLeaves();
+        saveRice();
         saveConfigs();
+    }
+
+    private void loadLettucePlants() {
+        if (!lettuceFile.exists()) {
+            lettucePlantMap = new ConcurrentHashMap<>();
+            if (!getDataFolder().exists()) {
+                try {
+                    getDataFolder().mkdir();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+            try {
+                lettuceFile.createNewFile();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            return;
+        }
+
+        Gson gson = new Gson();
+        try (Reader reader = new FileReader(bushFile)) {
+            Type listType = new TypeToken<List<LettucePlant>>() {
+            }.getType();
+            List<LettucePlant> list = gson.fromJson(reader, listType);
+            bushMap = new ConcurrentHashMap<>();
+            if (list != null) {
+                for (LettucePlant lettucePlant : list) {
+                    lettucePlantMap.put(lettucePlant.toLocation(), lettucePlant);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void saveLettucePlants(){
+        List<LettucePlant> lettuceList = lettucePlantMap.values()
+                .stream()
+                .toList();
+
+        Gson gson = new GsonBuilder().setPrettyPrinting().create();
+        try (Writer writer = new FileWriter(lettuceFile)) {
+            gson.toJson(lettuceList, writer);
+        } catch (Exception e){
+            e.printStackTrace();
+        }
+
     }
 
     private void loadConfigs(){
@@ -287,7 +352,7 @@ public final class CorvidAgriculture extends JavaPlugin {
 
         Gson gson = new Gson();
         try (Reader reader = new FileReader(saplingFile)) {
-            Type listType = new TypeToken<List<BerryLike>>() {}.getType();
+            Type listType = new TypeToken<List<FruitTreeSapling>>() {}.getType();
             List<FruitTreeSapling> list = gson.fromJson(reader, listType);
             saplingMap = new HashMap<>();
             if(list!=null) {
@@ -332,6 +397,45 @@ public final class CorvidAgriculture extends JavaPlugin {
             if(list!=null) {
                 for(FruitGrowingLeaves leaves : list){
                     growingLeavesMap.put(leaves.toLocation(),leaves);
+                }
+            }
+        } catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+
+    private void saveRice(){
+        List<Rice> riceList = riceMap.values()
+                .stream()
+                .toList();
+
+        Gson gson = new GsonBuilder().setPrettyPrinting().create();
+        try (Writer writer = new FileWriter(riceFile)) {
+            gson.toJson(riceList, writer);
+        } catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+
+    private void loadRice(){
+        if(!riceFile.exists()){
+            riceMap = new ConcurrentHashMap<>();
+            try {
+                riceFile.createNewFile();
+            } catch (Exception e){
+                e.printStackTrace();
+            }
+            return;
+        }
+
+        Gson gson = new Gson();
+        try (Reader reader = new FileReader(riceFile)) {
+            Type listType = new TypeToken<List<Rice>>() {}.getType();
+            List<Rice> list = gson.fromJson(reader, listType);
+            riceMap = new ConcurrentHashMap<>();
+            if(list!=null) {
+                for(Rice rice : list){
+                    riceMap.put(rice.toLocation(),rice);
                 }
             }
         } catch (Exception e){

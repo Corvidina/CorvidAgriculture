@@ -1,6 +1,6 @@
 package com.corvidina.corvidAgriculture;
 
-import com.corvidina.corvidAgriculture.items.Crops;
+import com.corvidina.corvidAgriculture.items.Crop;
 import com.corvidina.corvidAgriculture.items.ItemHandler;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -12,7 +12,7 @@ public class FruitGrowingLeaves {
     private final double x,y,z;
     private byte age;
 
-    public FruitGrowingLeaves(Location loc, Crops type){
+    public FruitGrowingLeaves(Location loc, Crop type){
         this.type=type.name().toLowerCase();
         this.world=loc.getWorld().getName();
         this.x=loc.getX();
@@ -36,8 +36,8 @@ public class FruitGrowingLeaves {
         age=0;
     }
 
-    public Crops getType(){
-        return Crops.valueOf(type.toUpperCase());
+    public Crop getType(){
+        return Crop.valueOf(type.toUpperCase());
     }
 
     public static void breakLeaves(FruitGrowingLeaves leaves){
@@ -45,6 +45,6 @@ public class FruitGrowingLeaves {
         plugin.getGrowingLeavesMap().remove(loc);
         loc.getBlock().setType(Material.AIR);
         loc = loc.toBlockLocation();
-        loc.getWorld().dropItemNaturally(loc.add(0.5,0.5,0.5), ItemHandler.buildItemBkt(Crops.getCorrespondingSeed(leaves.getType())));
+        loc.getWorld().dropItemNaturally(loc.add(0.5,0.5,0.5), ItemHandler.buildItemBkt(Crop.getCorrespondingSeed(leaves.getType())));
     }
 }

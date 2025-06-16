@@ -1,15 +1,12 @@
 package com.corvidina.corvidAgriculture.commands;
 
-import com.corvidina.corvidAgriculture.Bush;
-import com.corvidina.corvidAgriculture.CorvidAgriculture;
-import com.corvidina.corvidAgriculture.FruitGrowingLeaves;
-import com.corvidina.corvidAgriculture.FruitTreeSapling;
+import com.corvidina.corvidAgriculture.*;
 import com.corvidina.corvidAgriculture.entities.Crow;
 import com.corvidina.corvidAgriculture.entities.HexMarker;
 import com.corvidina.corvidAgriculture.entities.Insect;
-import com.corvidina.corvidAgriculture.items.Crops;
-import com.corvidina.corvidAgriculture.items.ItemHandler;
-import com.corvidina.corvidAgriculture.items.Seeds;
+import com.corvidina.corvidAgriculture.items.*;
+import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -17,14 +14,16 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.craftbukkit.CraftWorld;
 import org.bukkit.entity.Player;
 import org.bukkit.event.entity.CreatureSpawnEvent;
+import org.bukkit.inventory.EquipmentSlot;
+import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Arrays;
+import java.util.HashMap;
 
 public class TestCommand
     implements CommandExecutor
 {
-    private FruitTreeSapling sapling;
+    private Rice rice;
     private static final CorvidAgriculture plugin = CorvidAgriculture.getPlugin(CorvidAgriculture.class);
     @Override
     public boolean onCommand(@NotNull CommandSender commandSender, @NotNull Command command, @NotNull String s, @NotNull String @NotNull [] strings) {
@@ -56,20 +55,20 @@ public class TestCommand
                     break;
                 }
                 case "bush": {
-                    Bush.buildBush(player.getLocation(), Crops.CRANBERRY,true);
+                    Bush.buildBush(player.getLocation(), Crop.CRANBERRY,true);
                     break;
                 }
-                case "tree": {
-                    sapling = FruitTreeSapling.buildFruitTreeSapling(player.getLocation(), Crops.LEMON);
+                case "rice": {
+                    rice = Rice.buildRice(player.getLocation());
                     break;
                 }
-                case "tree_test": {
-                    FruitTreeSapling.growSapling(sapling);
+                case "rice_test": {
+                    Rice.growRice(rice);
                     break;
                 }
                 case "fruit_leaves": {
                     player.getLocation().getBlock().setType(Material.OAK_LEAVES);
-                    FruitGrowingLeaves fruitGrowingLeaves = new FruitGrowingLeaves(player.getLocation(), Crops.LEMON);
+                    FruitGrowingLeaves fruitGrowingLeaves = new FruitGrowingLeaves(player.getLocation(), Crop.LEMON);
                     fruitGrowingLeaves.incrementAge(7);
                     plugin.getGrowingLeavesMap().put(fruitGrowingLeaves.toLocation(),fruitGrowingLeaves);
                 }
@@ -82,7 +81,40 @@ public class TestCommand
                 case "seeds": {
                     if(strings.length>1) {
                         player.getInventory().addItem(ItemHandler.buildItemBkt(Seeds.valueOf(strings[1].toUpperCase())));
+                    } else {
+                        commandSender.sendMessage("Failed to have a type argument");
                     }
+                    break;
+                }
+                case "dough": {
+                    player.getInventory().addItem(ItemHandler.buildItemBkt(HelperIngredient.DOUGH));
+                    break;
+                }
+                case "accelerate_bushes": {
+                    for (Location loc : plugin.getBushMap().keySet()) {
+                        if(loc.isChunkLoaded()) {
+                            Bush.growBerry(plugin.getBushMap().get(loc));
+                        }
+                    }
+                    break;
+                }
+                case "add_replanter": {
+                    if(ItemHandler.itemIsHoe(player.getInventory().getItem(EquipmentSlot.HAND).getType())){
+                        ItemStack stack = player.getInventory().getItem(EquipmentSlot.HAND);
+                        stack = ItemHandler.addZealToHoe(stack, Zeal.REPLANTER);
+                        player.getInventory().setItem(EquipmentSlot.HAND,stack);
+                    }
+                    break;
+                }
+                case "print_zeals": {
+                    HashMap<Zeal, Integer> map = ItemHandler.getZeals(player.getInventory().getItem(EquipmentSlot.HAND));
+                    for (Zeal zeal : map.keySet()) {
+                        Bukkit.getLogger().info(zeal.toString() + " : " + map.get(zeal));
+                    }
+                    break;
+                }
+                case "print_replanter": {
+                    Bukkit.getLogger().info(""+ItemHandler.getZeal(player.getInventory().getItem(EquipmentSlot.HAND), Zeal.REPLANTER));
                     break;
                 }
                 default: {

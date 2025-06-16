@@ -56,6 +56,7 @@ public class AgricultureMenu extends View {
                 :ItemHandler.itemIsHoe(render.getPlayer().getInventory().getItem(EquipmentSlot.OFF_HAND).getType())
                 ?render.getPlayer().getInventory().getItem(EquipmentSlot.OFF_HAND)
                 :ItemStack.empty();
+
         render.slot(1,3, temp);
 
         temp = ItemHandler.playerHead(render.getPlayer().getPlayerProfile());

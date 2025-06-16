@@ -1,6 +1,6 @@
 package com.corvidina.corvidAgriculture;
 
-import com.corvidina.corvidAgriculture.items.Crops;
+import com.corvidina.corvidAgriculture.items.Crop;
 import com.corvidina.corvidAgriculture.items.ItemHandler;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceLocation;
@@ -21,7 +21,7 @@ public class FruitTreeSapling {
     private final String type;
 
 
-    public FruitTreeSapling(Location loc, Crops type){
+    public FruitTreeSapling(Location loc, Crop type){
         this.x=loc.getBlockX();
         this.y=loc.getBlockY();
         this.z=loc.getBlockZ();
@@ -33,11 +33,11 @@ public class FruitTreeSapling {
         return new Location(Bukkit.getWorld(world),x,y,z);
     }
 
-    public Crops getType(){
-        return Crops.valueOf(type.toUpperCase());
+    public Crop getType(){
+        return Crop.valueOf(type.toUpperCase());
     }
 
-    public static FruitTreeSapling buildFruitTreeSapling(Location loc, Crops type) {
+    public static FruitTreeSapling buildFruitTreeSapling(Location loc, Crop type) {
         loc.getBlock().setType(Material.OAK_SAPLING);
         FruitTreeSapling sapling = new FruitTreeSapling(loc,type);
         plugin.getFruitTreeSaplingMap().put(loc.toBlockLocation(),sapling);
@@ -146,7 +146,8 @@ public class FruitTreeSapling {
 
     public static void breakSapling(FruitTreeSapling sapling){
         Location loc = sapling.toLocation().add(0.5,0.5,0.5);
-        loc.getWorld().dropItemNaturally(loc, ItemHandler.buildItemBkt(Crops.getCorrespondingSeed(sapling.getType())));
+        loc.getBlock().setType(Material.AIR);
+        loc.getWorld().dropItemNaturally(loc, ItemHandler.buildItemBkt(Crop.getCorrespondingSeed(sapling.getType())));
     }
 
     private static int numAdjacentAirBlocks(Location loc){
