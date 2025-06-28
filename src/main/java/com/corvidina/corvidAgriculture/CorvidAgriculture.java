@@ -6,6 +6,7 @@ import com.corvidina.corvidAgriculture.gui.ServerCatering;
 import com.corvidina.corvidAgriculture.items.Crop;
 import com.corvidina.corvidAgriculture.items.ItemHandler;
 import com.corvidina.corvidAgriculture.listeners.*;
+import com.corvidina.corvidAgriculture.simulations.ExecutableSimulation;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
@@ -18,8 +19,10 @@ import java.io.*;
 import java.lang.reflect.Type;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedDeque;
 
 public final class CorvidAgriculture extends JavaPlugin {
+    public Queue<ExecutableSimulation> executableSimulations;
     public ViewFrame cateringMenu;
     private ServerCatering serverCatering;
     private CateringUpdater cateringUpdater;
@@ -58,13 +61,14 @@ public final class CorvidAgriculture extends JavaPlugin {
           "oak_fruit_tree_small_3"
     };
 
-
+    private SlowHandler slowHandler;
     private TickHandler tickHandler;
 
     private int cateringAdditionRate = 60;
     @Override
     public void onEnable() {
         // Plugin startup logic
+        this.executableSimulations=new ConcurrentLinkedDeque<>();
         loadBushData();
         loadBerryLikes();
         loadFruitTreeSaplings();
@@ -88,14 +92,22 @@ public final class CorvidAgriculture extends JavaPlugin {
         cateringUpdater = new CateringUpdater();
         cateringUpdater.runTaskTimer(this, 0, (long)cateringAdditionRate*20);
 
+        slowHandler = new SlowHandler();
+        slowHandler.runTaskTimer(this,200,400);
+
         tickHandler = new TickHandler();
-        tickHandler.runTaskTimer(this,200,400);
+        tickHandler.runTaskTimer(this,20,1);
+
         printStructures();
 
     }
 
     public double getSellMultiplier(){
         return sellMultiplier;
+    }
+
+    public Queue<ExecutableSimulation> getExecutableSimulationQueue(){
+        return this.executableSimulations;
     }
 
     public ConcurrentHashMap<Location,Bush> getBushMap(){

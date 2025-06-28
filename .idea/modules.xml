@@ -4,6 +4,8 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/Corvid_Agriculture.main.iml" filepath="$PROJECT_DIR$/.idea/modules/Corvid_Agriculture.main.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/Corvid_Agriculture.test.iml" filepath="$PROJECT_DIR$/.idea/modules/Corvid_Agriculture.test.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/com.corvidina.Corvid_Agriculture.main.iml" filepath="$PROJECT_DIR$/.idea/modules/com.corvidina.Corvid_Agriculture.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/com.corvidina.Corvid_Agriculture.test.iml" filepath="$PROJECT_DIR$/.idea/modules/com.corvidina.Corvid_Agriculture.test.iml" />
     </modules>
   </component>
 </project>

@@ -36,6 +36,7 @@ import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.UUID;
 
 public class ItemHandler {
@@ -56,6 +57,24 @@ public class ItemHandler {
     private static double[] valueChances = setValueChances(new double[]{
             5, 30, 25, 20, 15, 5
     });
+
+    public static double[] pushWeight(double @NotNull [] src, double amount, int times) {
+        if(times==0) {
+            return src.clone();
+        }
+        return pushWeight(
+                new double[] {
+                        src[0]*(1-amount),
+                        src[1]*(1-amount)+src[0]*amount,
+                        src[2]*(1-amount)+src[1]*amount,
+                        src[3]*(1-amount)+src[2]*amount,
+                        src[4]*(1-amount)+src[3]*amount,
+                        src[5]+src[4]*amount
+                },
+                amount,
+                times-1
+        );
+    }
 
     public static double[] setValueChances(double @NotNull [] rc) {
         if (rc.length != 6) {
@@ -1937,9 +1956,20 @@ public class ItemHandler {
         stack.set(DataComponents.CUSTOM_DATA,CustomData.of(tag));
         return stack;
     }
-
     public static org.bukkit.inventory.ItemStack addZealToHoe(org.bukkit.inventory.ItemStack stack, Zeal zeal) {
         return CraftItemStack.asBukkitCopy(addZealToHoe(CraftItemStack.asNMSCopy(stack),zeal));
+    }
+
+    public static org.bukkit.inventory.ItemStack addZealToLore(org.bukkit.inventory.ItemStack stack, Zeal zeal) {
+        ItemLore lore = stack.getData(DataComponentTypes.LORE);
+        List<Component> list = lore.lines();
+
+        for (int i = 0; i < list.size(); i++) {
+
+        }
+
+        stack.setData(DataComponentTypes.LORE, lore);
+        return stack;
     }
 
     public static HashMap<Zeal, Integer> getZeals(ItemStack stack) {

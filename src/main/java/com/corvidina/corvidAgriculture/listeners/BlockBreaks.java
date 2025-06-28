@@ -4,6 +4,7 @@ import com.corvidina.corvidAgriculture.*;
 import com.corvidina.corvidAgriculture.items.Crop;
 import com.corvidina.corvidAgriculture.items.ItemHandler;
 import com.corvidina.corvidAgriculture.items.Zeal;
+import com.corvidina.corvidAgriculture.simulations.PlayerPlacesBlockSimulation;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -32,6 +33,7 @@ public class BlockBreaks implements Listener {
         plugin=CorvidAgriculture.getPlugin(CorvidAgriculture.class);
     }
     public void handleGeneralBlockBreak(Block block, Cancellable event){
+
 
         if(plugin.getBushMap().containsKey(block.getLocation())){
             Location loca = block.getLocation();
@@ -180,8 +182,15 @@ public class BlockBreaks implements Listener {
                     age.setAge(0);
                     block.setBlockData(age);
 
-                    // Event cancel needs replaced with queueing a player place event and executing that queue tickly
-                    event.setCancelled(true);
+
+                    try {
+                        plugin.getExecutableSimulationQueue().add(new PlayerPlacesBlockSimulation(
+                                        block.getLocation(),
+                                        replantableMaterial,
+                                        player
+                                )
+                        );
+                    } catch (Exception ignored) {}
                 }
             }
         }
